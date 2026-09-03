@@ -6,6 +6,10 @@
 	path = artel-agent-server
 	url = https://github.com/project-artel/artel-agent-server.git
 	branch = develop
+[submodule "artel-cli"]
+	path = artel-cli
+	url = https://github.com/project-artel/artel-cli.git
+	branch = main
 [submodule "artel-home"]
 	path = artel-home
 	url = https://github.com/project-artel/artel-home
