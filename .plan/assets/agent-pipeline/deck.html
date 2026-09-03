@@ -1,0 +1,1110 @@
+<title>ARTEL Agent Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+
+<style>
+/* ---------------------------------------------------------------------------
+   ARTEL Replay Studio tokens (.agents/docs/DESIGN.md).
+   Dark-first by deliberate choice: this deck wears the product's own identity.
+   Every colour is painted explicitly so the page holds on either host ground.
+--------------------------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+
+  --canvas:       #090C10;
+  --surface:      #10151B;
+  --raised:       #171D25;
+  --hover:        #1D2530;
+  --border:       #27313D;
+  --border-strong:#3B4857;
+
+  --text:         #F4F7FA;
+  --text-2:       #A7B0BC;
+  --text-3:       #707B88;
+
+  --cyan:         #24C7E8;
+  --violet:       #8F7CF6;
+  --green:        #48C78E;
+  --amber:        #F2B84B;
+  --coral:        #FF634F;
+
+  --font-sans: "Inter", "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  --bar: 48px;
+  --rail: 244px;
+
+  --ease: cubic-bezier(.2, 0, 0, 1);
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+  background: var(--canvas);
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text-2);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; animation: none !important; }
+}
+
+/* --- top bar ------------------------------------------------------------ */
+
+.topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--bar);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  background: rgba(9, 12, 16, .88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.mark {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  color: var(--text);
+}
+.mark span { color: var(--cyan); }
+
+.topbar .sep {
+  width: 1px; height: 18px; background: var(--border-strong);
+}
+
+.topbar .what {
+  font-size: 12px;
+  color: var(--text-3);
+  letter-spacing: .02em;
+}
+
+.counter {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.counter b { color: var(--text); font-weight: 500; }
+
+.progress {
+  position: absolute;
+  left: 0; bottom: -1px;
+  height: 2px;
+  width: 0;
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgba(36, 199, 232, .6);
+  transition: width 160ms var(--ease);
+}
+
+/* --- rail --------------------------------------------------------------- */
+
+.rail {
+  position: fixed;
+  top: var(--bar); bottom: 0; left: 0;
+  width: var(--rail);
+  z-index: 30;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px 0 32px;
+}
+
+.rail-title {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 0 20px 10px;
+}
+
+.rail a {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 20px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 13px;
+  border-left: 2px solid transparent;
+  transition: background 100ms var(--ease), color 100ms var(--ease);
+}
+.rail a .n {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.rail a:hover { background: var(--hover); color: var(--text); }
+.rail a:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.rail a.on {
+  background: var(--raised);
+  border-left-color: var(--cyan);
+  color: var(--text);
+}
+.rail a.on .n { color: var(--cyan); }
+
+.rail-foot {
+  margin-top: 20px;
+  padding: 14px 20px 0;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--text-3);
+}
+.rail-foot kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--text-2);
+}
+
+/* --- sections ----------------------------------------------------------- */
+
+main { margin-left: var(--rail); }
+
+section {
+  scroll-snap-align: start;
+  scroll-margin-top: var(--bar);
+  min-height: calc(100vh - var(--bar));
+  padding: 56px 56px 72px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  max-width: 1180px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+h1, h2, h3 { color: var(--text); text-wrap: balance; margin: 0; }
+
+h1 {
+  font-size: clamp(34px, 4.4vw, 52px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+h2 {
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+h3 {
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+p { margin: 0; max-width: 68ch; }
+.lede { font-size: 16px; color: var(--text-2); max-width: 70ch; }
+.lede strong { color: var(--text); font-weight: 600; }
+
+code, .mono { font-family: var(--font-mono); font-variant-ligatures: none; }
+
+:not(pre) > code {
+  font-size: .88em;
+  color: var(--cyan);
+  background: rgba(36, 199, 232, .07);
+  border: 1px solid rgba(36, 199, 232, .18);
+  border-radius: 3px;
+  padding: .5px 4px;
+  white-space: nowrap;
+}
+
+/* --- reusable blocks ---------------------------------------------------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card h3 { display: flex; align-items: baseline; gap: 8px; }
+.card p { font-size: 13.5px; line-height: 1.62; color: var(--text-2); }
+.card .tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.card.cyan   { border-left: 2px solid var(--cyan); }
+.card.violet { border-left: 2px solid var(--violet); }
+.card.green  { border-left: 2px solid var(--green); }
+.card.amber  { border-left: 2px solid var(--amber); }
+.card.coral  { border-left: 2px solid var(--coral); }
+
+.scroller { overflow-x: auto; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 640px;
+  font-size: 13px;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 9px 14px 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  border-bottom-color: var(--border-strong);
+  white-space: nowrap;
+}
+td { color: var(--text-2); }
+td:first-child { color: var(--text); font-weight: 500; }
+td.mono, th.mono { font-family: var(--font-mono); font-size: 12px; }
+td.num { font-variant-numeric: tabular-nums; }
+
+figure { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+figure svg { display: block; width: 100%; max-width: 100%; height: auto; }
+.figwrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 22px 24px;
+  overflow-x: auto;
+}
+figcaption {
+  font-size: 12.5px;
+  line-height: 1.62;
+  color: var(--text-3);
+  max-width: 82ch;
+}
+figcaption b { color: var(--text-2); font-weight: 500; }
+
+.note {
+  border-left: 2px solid var(--border-strong);
+  padding: 2px 0 2px 16px;
+  font-size: 13.5px;
+  line-height: 1.66;
+  color: var(--text-2);
+  max-width: 74ch;
+}
+.note.cyan   { border-left-color: var(--cyan); }
+.note.violet { border-left-color: var(--violet); }
+.note.amber  { border-left-color: var(--amber); }
+.note.coral  { border-left-color: var(--coral); }
+.note.green  { border-left-color: var(--green); }
+.note b { color: var(--text); font-weight: 600; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.legend i {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 2px;
+  margin-right: 7px;
+  vertical-align: baseline;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.stat {
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 16px;
+  min-width: 120px;
+}
+.stat .v {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.stat .k {
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--text-3);
+}
+
+ul.plain { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+ul.plain li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.62;
+  max-width: 72ch;
+}
+ul.plain li::before {
+  content: "";
+  position: absolute;
+  left: 2px; top: .62em;
+  width: 5px; height: 5px;
+  border-radius: 1px;
+  background: var(--border-strong);
+}
+ul.plain li b { color: var(--text); font-weight: 600; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 26px; }
+
+/* --- cover -------------------------------------------------------------- */
+
+.cover { justify-content: center; gap: 30px; }
+.cover .sub {
+  font-size: 17px;
+  color: var(--text-2);
+  max-width: 62ch;
+}
+.repochips { display: flex; flex-wrap: wrap; gap: 8px; }
+.repochips span {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-2);
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 5px 11px;
+}
+.repochips span b { color: var(--cyan); font-weight: 500; }
+
+.exrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 14px; }
+.ex { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.ex .k {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.ex pre {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-2);
+  white-space: pre;
+  tab-size: 2;
+}
+.ex pre em { font-style: normal; color: var(--text); }
+.ex pre i  { font-style: normal; color: var(--text-3); }
+.ex pre b  { font-weight: 500; color: var(--cyan); }
+.ex pre u  { text-decoration: none; color: var(--green); }
+.ex.out pre { border-left: 2px solid var(--green); }
+.ex.in  pre { border-left: 2px solid var(--cyan); }
+
+/* --- responsive --------------------------------------------------------- */
+
+@media (max-width: 1080px) {
+  .rail { display: none; }
+  main { margin-left: 0; }
+  section { padding: 44px 28px 60px; }
+  h2 { font-size: 25px; }
+}
+</style>
+
+<div class="topbar">
+  <span class="mark">ARTEL<span>&#183;</span>QA</span>
+  <span class="sep"></span>
+  <span class="what">agent 구조와 데이터 파이프라인</span>
+  <span class="counter"><b id="cur">00</b> / 5</span>
+  <div class="progress" id="progress"></div>
+</div>
+
+<nav class="rail" aria-label="섹션">
+  <div class="rail-title">Sections</div>
+  <a href="#s0" data-n="0"><span class="n">00</span><span>세 갈래</span></a>
+  <a href="#s1" data-n="1"><span class="n">01</span><span>evidence → content map</span></a>
+  <a href="#s2" data-n="2"><span class="n">02</span><span>document → knowledge</span></a>
+  <a href="#s3" data-n="3"><span class="n">03</span><span>QA agent 의 tool</span></a>
+  <a href="#s4" data-n="4"><span class="n">04</span><span>pulse</span></a>
+  <a href="#s5" data-n="5"><span class="n">05</span><span>context 구성</span></a>
+  <div class="rail-foot">
+    <kbd>↓</kbd> <kbd>↑</kbd> 또는 <kbd>J</kbd> <kbd>K</kbd> 로 섹션 이동
+  </div>
+</nav>
+
+<main>
+
+<section id="s0" class="cover">
+  <div class="eyebrow">ARTEL · agent pipeline</div>
+  <h1>ARTEL agent 구조와<br>데이터 파이프라인</h1>
+
+  <div class="scroller" style="max-width:900px">
+  <table>
+    <thead><tr><th>갈래</th><th>입력</th><th>가공</th><th>산출</th></tr></thead>
+    <tbody>
+      <tr><td>evidence</td><td>Unity 빌드</td><td>조인 5단계</td><td class="mono">scene · capability</td></tr>
+      <tr><td>document</td><td>기획 문서</td><td>모델 2회 + embedding</td><td class="mono">knowledge · vector(1024)</td></tr>
+      <tr><td>QA 런</td><td>시나리오 · 붙어 있는 게임</td><td>tool loop 최대 37개</td><td class="mono">판정 · issue · knowledge</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="s1">
+  <div class="eyebrow">01</div>
+  <h2>evidence → content map</h2>
+  <div class="exrow"><div class="ex in"><span class="k">입력 — evidence 문서의 record 하나</span><pre>{
+  &quot;assembly&quot;: &quot;Assembly-CSharp&quot;,
+  &quot;owner&quot;:    &quot;Battle.TurnBattleController&quot;,
+  &quot;method&quot;:   &quot;OnAttackPressed&quot;,
+  &quot;wiring&quot;: [
+    { &quot;scene&quot;:   &quot;TurnBattleScene&quot;,
+      &quot;control&quot;: &quot;Canvas[0]/BottomBar[1]/AttackButton[0]&quot;,
+      &quot;event&quot;:   &quot;Button.onClick&quot; }
+  ],
+  &quot;condition&quot;: { &quot;target&quot;: &quot;TurnState.isPlayerTurn&quot;,
+                 &quot;op&quot;: &quot;==&quot;, &quot;value&quot;: &quot;true&quot; },
+  &quot;effects&quot;:   [ { &quot;target&quot;: &quot;EnemyHp.current&quot;, &quot;op&quot;: &quot;sub&quot; } ]
+}</pre></div><div class="ex out"><span class="k">출력 — capability 행</span><pre>scene_id          412  → TurnBattleScene
+origin            evidence
+verification      unverified
+summary           TurnBattleController.OnAttackPressed 가
+                  EnemyHp.current 를 감소시킨다
+given_text        TurnState.isPlayerTurn == true
+control_selector  Canvas[0]/BottomBar[1]/AttackButton[0]
+control_label     공격
+interaction       click
+input_key         NULL
+
+-- capability_evidence
+stable_key  Assembly-CSharp|Battle.TurnBattleController
+            |OnAttackPressed|System.Void OnAttackPressed()</pre></div></div>
+  <figure><div class="figwrap"><svg viewBox="0 0 980 372" role="img" aria-label="evidence 문서가 EvidenceJoin 의 다섯 단계를 지나 ContentMapIngestService 로 가고, 다섯 개의 테이블 행이 된다." style="color:#A7B0BC">
+        <defs>
+          <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#707B88"/>
+          </marker>
+        </defs>
+
+        <rect x="40" y="24" width="520" height="48" rx="5" fill="#171D25" stroke="#3B4857"/>
+        <text x="56" y="45" font-size="12" font-weight="600" fill="#F4F7FA">evidence 문서</text>
+        <text x="56" y="63" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#707B88">types · placements · wiring · prefabs · conditions</text>
+
+        <line x1="300" y1="72" x2="300" y2="100" stroke="#707B88" stroke-width="1.3" marker-end="url(#a4)"/>
+        <text x="310" y="91" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#A7B0BC">EvidenceParser</text>
+
+        <rect x="40" y="104" width="520" height="176" rx="6" fill="#10151B" stroke="#3B4857"/>
+        <text x="56" y="128" font-size="12" font-weight="600" fill="#F4F7FA">EvidenceJoin — capability 후보</text>
+
+        <text x="56" y="156" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#24C7E8">1</text>
+        <text x="76" y="156" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">PlacementIndex</text>
+        <text x="230" y="156" font-size="10.5" fill="#A7B0BC">타입이 놓인 scene</text>
+
+        <text x="56" y="182" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#24C7E8">2</text>
+        <text x="76" y="182" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">SceneWiringIndex</text>
+        <text x="230" y="182" font-size="10.5" fill="#A7B0BC">컨트롤 → 코드 경로</text>
+
+        <text x="56" y="208" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#24C7E8">3</text>
+        <text x="76" y="208" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">SpawnAttribution</text>
+        <text x="230" y="208" font-size="10.5" fill="#A7B0BC">프리팹에만 있는 타입의 주소</text>
+
+        <text x="56" y="234" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#24C7E8">4</text>
+        <text x="76" y="234" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">ConditionBranches</text>
+        <text x="230" y="234" font-size="10.5" fill="#A7B0BC">조건 branch 분리</text>
+
+        <text x="56" y="260" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#24C7E8">5</text>
+        <text x="76" y="260" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">RecordTranslation</text>
+        <text x="230" y="260" font-size="10.5" fill="#A7B0BC">DB 어휘로 변환</text>
+
+        <text x="40" y="302" font-size="10.5" fill="#707B88">DB 없는 순수 계산 · 같은 문서면 같은 결과</text>
+
+        <line x1="560" y1="132" x2="634" y2="132" stroke="#707B88" stroke-width="1.3" marker-end="url(#a4)"/>
+        <text x="597" y="123" text-anchor="middle" font-size="10" fill="#A7B0BC">후보 목록</text>
+
+        <rect x="640" y="104" width="300" height="56" rx="5" fill="#171D25" stroke="#3B4857"/>
+        <text x="656" y="127" font-size="12" font-weight="600" fill="#F4F7FA">ContentMapIngestService</text>
+        <text x="656" y="146" font-size="10.5" fill="#707B88">문서 하나 = 한 트랜잭션</text>
+
+        <line x1="790" y1="160" x2="790" y2="188" stroke="#707B88" stroke-width="1.3" marker-end="url(#a4)"/>
+        <text x="800" y="179" font-size="10" fill="#A7B0BC">부분 적재 없음</text>
+
+        <rect x="640" y="192" width="300" height="26" rx="4" fill="#171D25" stroke="#48C78E"/>
+        <text x="654" y="209" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">scene</text>
+        <rect x="640" y="224" width="300" height="26" rx="4" fill="#171D25" stroke="#48C78E"/>
+        <text x="654" y="241" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">capability</text>
+        <rect x="640" y="256" width="300" height="26" rx="4" fill="#171D25" stroke="#48C78E"/>
+        <text x="654" y="273" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">capability_evidence</text>
+        <rect x="640" y="288" width="300" height="26" rx="4" fill="#171D25" stroke="#48C78E"/>
+        <text x="654" y="305" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">capability_effect</text>
+        <rect x="640" y="320" width="300" height="26" rx="4" fill="#171D25" stroke="#48C78E"/>
+        <text x="654" y="337" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">scene_edge</text>
+      </svg></div></figure>
+</section>
+
+<section id="s2">
+  <div class="eyebrow">02</div>
+  <h2>document → knowledge</h2>
+  <div class="exrow"><div class="ex in"><span class="k">색인 — 항목 하나 → 질문 3개 → 벡터</span><pre>-- knowledge
+id       kn_0182
+tag      RULE
+source   DOCUMENT
+summary  적 HP 가 0 이 되면 그 턴 종료 후
+         EndingScene 으로 넘어간다
+
+-- KnowledgeQueryAgent 가 만든 검색용 질문
+1  전투에서 이기면 어떻게 되나
+2  적을 쓰러뜨리면 어느 씬으로 가나
+3  승리 판정은 언제 일어나나
+
+-- 질문마다 embedding
+knowledge_embedding.embedding = vector(1024)</pre></div><div class="ex out"><span class="k">검색 — search_knowledge 가 돌려주는 문자열</span><pre>What the design documents say about &#x27;전투에서 이기면 어떻게 되나&#x27;:
+
+1. [id kn_0182 · RULE · from DOCUMENT · similarity 0.84]
+   적 HP 가 0 이 되면 그 턴 종료 후 EndingScene 으로 넘어간다
+   전투 승리 판정은 턴 종료 시점에만 일어난다. 공격 직후가 아니라
+   상대 행동까지 끝난 뒤 HP 를 확인한다.
+2. [id kn_0247 · FACT · from QA_RUN · similarity 0.77]
+   아이템 사용은 턴을 소모하지 않는다
+   TurnCounter.turn 은 아이템 사용 후에도 그대로다.
+
+This is documentation, not the running build. Where it and the
+screen disagree, the screen is what the step actually did.
+
+5 knowledge search(es) left in this run.</pre></div></div>
+  <figure><div class="figwrap"><svg viewBox="0 0 984 400" role="img" aria-label="knowledge 색인은 문서에서 항목으로, 항목에서 질문과 벡터로 두 단계를 거치고, 검색은 artel-orchestration-server 가 artel-agent-server 에 임베딩을 요청해 pgvector 로 돌아온다." style="color:#A7B0BC">
+        <defs>
+          <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#707B88"/>
+          </marker>
+          <marker id="a5g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#48C78E"/>
+          </marker>
+        </defs>
+
+        <text x="16" y="36" font-size="11" font-weight="600" letter-spacing="1.2" fill="#707B88">색인 ① 문서를 항목으로</text>
+        <rect x="16"  y="52" width="184" height="52" rx="5" fill="#171D25" stroke="#3B4857"/>
+        <text x="30" y="74" font-size="11.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">project_document</text>
+        <text x="30" y="92" font-size="10" fill="#707B88">기획 문서 · 참고 자료</text>
+
+        <rect x="272" y="52" width="184" height="52" rx="5" fill="#171D25" stroke="#3B4857"/>
+        <text x="286" y="74" font-size="12" font-weight="600" fill="#F4F7FA">텍스트 추출</text>
+        <text x="286" y="92" font-size="10" fill="#707B88">허용 host · 크기 상한</text>
+
+        <rect x="528" y="52" width="184" height="52" rx="5" fill="#171D25" stroke="#8F7CF6"/>
+        <text x="542" y="74" font-size="12" font-weight="600" fill="#F4F7FA">GameContextAgent</text>
+        <text x="542" y="92" font-size="10" fill="#707B88">구조화 출력 1회</text>
+
+        <rect x="784" y="52" width="184" height="52" rx="5" fill="#171D25" stroke="#3B4857"/>
+        <text x="798" y="74" font-size="11.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">knowledge</text>
+        <text x="798" y="92" font-size="10" fill="#707B88">+ knowledge_event 이력</text>
+
+        <line x1="200" y1="78" x2="266" y2="78" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <line x1="456" y1="78" x2="522" y2="78" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <line x1="712" y1="78" x2="778" y2="78" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <text x="233" y="68" text-anchor="middle" font-size="10" fill="#A7B0BC">fetch</text>
+        <text x="489" y="68" text-anchor="middle" font-size="10" fill="#A7B0BC">문서 1개 = 1회</text>
+        <text x="745" y="68" text-anchor="middle" font-size="10" fill="#A7B0BC">항목 단위 저장</text>
+
+        <text x="16" y="156" font-size="11" font-weight="600" letter-spacing="1.2" fill="#707B88">색인 ② 항목을 검색키로</text>
+        <rect x="16"  y="172" width="184" height="52" rx="5" fill="#171D25" stroke="#3B4857"/>
+        <text x="30" y="194" font-size="11.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">knowledge</text>
+        <text x="30" y="212" font-size="10" fill="#707B88">summary · description</text>
+
+        <rect x="272" y="172" width="184" height="52" rx="5" fill="#171D25" stroke="#8F7CF6"/>
+        <text x="286" y="194" font-size="12" font-weight="600" fill="#F4F7FA">KnowledgeQueryAgent</text>
+        <text x="286" y="212" font-size="10" fill="#707B88">항목마다 1회 · 동시 실행</text>
+
+        <rect x="528" y="172" width="184" height="52" rx="5" fill="#171D25" stroke="#24C7E8"/>
+        <text x="542" y="194" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">/internal/embed</text>
+        <text x="542" y="212" font-size="10" fill="#707B88">임베딩 전용 경로</text>
+
+        <rect x="784" y="172" width="184" height="52" rx="5" fill="#171D25" stroke="#48C78E"/>
+        <text x="798" y="194" font-size="11.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">knowledge_embedding</text>
+        <text x="798" y="212" font-size="10" font-family="JetBrains Mono, monospace" fill="#707B88">vector(1024) · pgvector</text>
+
+        <line x1="200" y1="198" x2="266" y2="198" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <line x1="456" y1="198" x2="522" y2="198" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <line x1="712" y1="198" x2="778" y2="198" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <text x="233" y="188" text-anchor="middle" font-size="10" fill="#A7B0BC">검색용 질문</text>
+        <text x="489" y="188" text-anchor="middle" font-size="10" fill="#A7B0BC">질문 문장들</text>
+        <text x="745" y="188" text-anchor="middle" font-size="10" fill="#A7B0BC">벡터로</text>
+
+        <text x="16" y="276" font-size="11" font-weight="600" letter-spacing="1.2" fill="#24C7E8">검색 — QA 런 중</text>
+        <rect x="16"  y="292" width="184" height="52" rx="5" fill="#171D25" stroke="#24C7E8"/>
+        <text x="30" y="314" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">search_knowledge</text>
+        <text x="30" y="332" font-size="10" fill="#707B88">agent 가 고른 tool</text>
+
+        <rect x="272" y="292" width="184" height="52" rx="5" fill="#171D25" stroke="#3B4857"/>
+        <text x="286" y="314" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">KNOWLEDGE_SEARCH</text>
+        <text x="286" y="332" font-size="10" fill="#707B88">WebSocket 프레임</text>
+
+        <rect x="528" y="292" width="184" height="52" rx="5" fill="#171D25" stroke="#24C7E8"/>
+        <text x="542" y="314" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">/internal/embed</text>
+        <text x="542" y="332" font-size="10" fill="#707B88">질의문을 벡터로</text>
+
+        <rect x="784" y="292" width="184" height="52" rx="5" fill="#171D25" stroke="#48C78E"/>
+        <text x="798" y="314" font-size="12" font-weight="600" fill="#F4F7FA">pgvector 코사인</text>
+        <text x="798" y="332" font-size="10" fill="#707B88">+ 이웃 · knowledge_usage</text>
+
+        <line x1="200" y1="318" x2="266" y2="318" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <line x1="456" y1="318" x2="522" y2="318" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <line x1="712" y1="318" x2="778" y2="318" stroke="#707B88" stroke-width="1.3" marker-end="url(#a5)"/>
+        <text x="233" y="308" text-anchor="middle" font-size="10" fill="#A7B0BC">질문 한 줄</text>
+        <text x="489" y="308" text-anchor="middle" font-size="10" fill="#A7B0BC">임베딩 요청</text>
+        <text x="745" y="308" text-anchor="middle" font-size="10" fill="#A7B0BC">유사도 상위 N</text>
+
+        <polyline points="876,344 876,384 108,384 108,350" fill="none" stroke="#48C78E" stroke-width="1.3" marker-end="url(#a5g)"/>
+        <text x="492" y="376" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#48C78E">KNOWLEDGE_SEARCH_RESULT — messageId 로 대응</text>
+      </svg></div></figure>
+</section>
+
+<section id="s3">
+  <div class="eyebrow">03</div>
+  <h2>QA agent 의 tool</h2>
+  <div class="scroller">
+  <table>
+    <thead><tr><th>갈래</th><th class="num">개수</th><th class="mono">tool</th></tr></thead>
+    <tbody>
+      <tr><td>관측</td><td class="num">3</td><td class="mono">observe_scene · inspect_object · capture_screen</td></tr>
+      <tr><td>조작</td><td class="num">16</td><td class="mono">click_button · enter_text · press_key · release_key · hold_key ·
+        move_pointer · click_at · double_click_at · hold_mouse_button · release_mouse_button · drag_pointer ·
+        set_input_axis · set_input_button · pause_game_time · resume_game_time · reset_game</td></tr>
+      <tr><td>knowledge</td><td class="num">7</td><td class="mono">search_knowledge · record_knowledge · update_knowledge ·
+        forget_knowledge · link_knowledge · unlink_knowledge · expand_knowledge</td></tr>
+      <tr><td>screen · capability</td><td class="num">5</td><td class="mono">include_screen_selector · exclude_screen_selector ·
+        list_scene_capabilities · record_capability_verdict · record_new_capability</td></tr>
+      <tr><td>진행 · 판정</td><td class="num">5</td><td class="mono">report_step · report_issue · finish_run ·
+        wait_for_operator · reply_to_operator</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="exrow"><div class="ex in"><span class="k">모델이 낸 tool 호출</span><pre>{ &quot;name&quot;: &quot;observe_scene&quot;,
+  &quot;args&quot;: { &quot;step&quot;: 4,
+            &quot;thought&quot;: &quot;공격 후 EnemyHp 가 줄었는지 본다&quot;,
+            &quot;wait_seconds&quot;: 0.0,
+            &quot;current_scene&quot;: false } }
+
+{ &quot;name&quot;: &quot;report_step&quot;,
+  &quot;args&quot;: { &quot;step&quot;: 4,
+            &quot;passed&quot;: true,
+            &quot;message&quot;: &quot;EnemyHp.current 80 → 52. 기대한 감소 확인.&quot;,
+            &quot;thought&quot;: &quot;검증 스텝이라 여기서 TC 판정이 정해진다&quot;,
+            &quot;used_knowledge_ids&quot;: [&quot;kn_0182&quot;] } }</pre></div><div class="ex out"><span class="k">observe_scene 이 돌려준 ToolMessage</span><pre>&lt;&lt;scene view 2&gt;&gt;
+scene: TurnBattleScene  (observation 2)
+screen: 1920x1080 pixels
+
+changed since your last look:
+  EnemyHp.current: 80 → 52
+  TurnCounter.turn: 3 → 4
+unchanged: 1
+  PlayerHp.current = 120
+
+you can act on:
+  [41] AttackButton (Button) @ 890,928 140x56 — 공격
+  [42] ItemButton (Button) @ 1050,928 140x56 — 아이템
+&lt;&lt;end scene view&gt;&gt;</pre></div></div>
+  <figure><div class="figwrap"><svg viewBox="0 0 980 470" role="img" aria-label="QA 런의 tool loop: artel-agent-server 의 모델과 tool 이 돌면서 프레임을 artel-orchestration-server 로 내고, 그것이 다시 Unity SDK 로 옮겨지며 관측이 되돌아온다." style="color:#A7B0BC">
+        <defs>
+          <marker id="a7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#707B88"/>
+          </marker>
+          <marker id="a7c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#24C7E8"/>
+          </marker>
+          <marker id="a7g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#48C78E"/>
+          </marker>
+        </defs>
+
+        <text x="24" y="52" font-size="12" font-weight="600" fill="#F4F7FA">artel-agent-server</text>
+        <text x="420" y="52" font-size="12" font-weight="600" fill="#F4F7FA">artel-orchestration-server</text>
+        <text x="760" y="52" font-size="12" font-weight="600" fill="#F4F7FA">Unity 게임 + artel-sdk</text>
+
+        <rect x="24"  y="64" width="276" height="376" rx="6" fill="#10151B" stroke="#3B4857"/>
+        <rect x="420" y="64" width="220" height="376" rx="6" fill="#10151B" stroke="#3B4857"/>
+        <rect x="760" y="64" width="196" height="376" rx="6" fill="#10151B" stroke="#3B4857"/>
+
+        <!-- band 1 -->
+        <text x="44" y="84" font-size="10" font-family="JetBrains Mono, monospace" fill="#707B88">QaRunner · create_agent tool loop</text>
+        <rect x="44"  y="100" width="104" height="40" rx="5" fill="#171D25" stroke="#8F7CF6"/>
+        <text x="60" y="118" font-size="11.5" font-weight="600" fill="#F4F7FA">모델</text>
+        <text x="60" y="133" font-size="9.5" fill="#707B88">OpenRouter</text>
+        <rect x="176" y="100" width="104" height="40" rx="5" fill="#171D25" stroke="#24C7E8"/>
+        <text x="192" y="118" font-size="11.5" font-weight="600" fill="#F4F7FA">tool 36</text>
+        <text x="192" y="133" font-size="9.5" fill="#707B88">호출당 1개</text>
+        <line x1="150" y1="112" x2="172" y2="112" stroke="#24C7E8" stroke-width="1.3" marker-end="url(#a7c)"/>
+        <text x="162" y="96" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#24C7E8">tool_calls</text>
+        <line x1="174" y1="130" x2="152" y2="130" stroke="#48C78E" stroke-width="1.3" marker-end="url(#a7g)"/>
+        <text x="162" y="155" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#48C78E">ToolMessage</text>
+
+        <rect x="44" y="180" width="236" height="56" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="58" y="199" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">QaRunState</text>
+        <text x="58" y="215" font-size="9.5" fill="#A7B0BC">스텝 판정 · watermark · 잔여 예산</text>
+        <text x="58" y="229" font-size="9.5" fill="#A7B0BC">대기 capture · 조회한 id</text>
+
+        <rect x="44" y="252" width="236" height="56" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="58" y="271" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">middleware</text>
+        <text x="58" y="287" font-size="9.5" fill="#A7B0BC">compaction · fold ×2 · vision</text>
+        <text x="58" y="301" font-size="9.5" fill="#A7B0BC">log_token_usage</text>
+
+        <rect x="44" y="324" width="236" height="88" rx="5" fill="#171D25" stroke="#F2B84B"/>
+        <text x="58" y="343" font-size="11" font-family="JetBrains Mono, monospace" fill="#F4F7FA">RunConfig</text>
+        <text x="58" y="359" font-size="9.5" fill="#707B88">세션 open 시점에 확정</text>
+        <text x="58" y="377" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#A7B0BC">model · prompt_version · language</text>
+        <text x="58" y="391" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#A7B0BC">reasoning · arch · vision</text>
+        <text x="58" y="405" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#F2B84B">agent_fingerprint · git_sha</text>
+
+        <text x="44" y="430" font-size="9.5" fill="#707B88">상한 둘 — tool 호출 수, 벽시계</text>
+
+        <!-- band 2 -->
+        <rect x="436" y="100" width="188" height="52" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="450" y="120" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">QaAgentInboundRouter</text>
+        <text x="450" y="138" font-size="9.5" fill="#A7B0BC">프레임 → 도메인 호출</text>
+
+        <rect x="436" y="172" width="188" height="52" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="450" y="192" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">QaActionDispatch</text>
+        <text x="450" y="210" font-size="9.5" fill="#A7B0BC">적재 + 전송 한 트랜잭션</text>
+
+        <rect x="436" y="244" width="188" height="52" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="450" y="264" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">QaLogService</text>
+        <text x="450" y="282" font-size="9.5" fill="#A7B0BC">qa_log 전량 + SSE 중계</text>
+
+        <rect x="436" y="316" width="188" height="52" rx="5" fill="#171D25" stroke="#48C78E"/>
+        <text x="450" y="336" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">knowledge · issue</text>
+        <text x="450" y="354" font-size="9.5" fill="#A7B0BC">screen 관측 적재</text>
+
+        <text x="436" y="398" font-size="9.5" fill="#707B88">모르는 type 은 라우터가</text>
+        <text x="436" y="412" font-size="9.5" fill="#707B88">거절합니다</text>
+
+        <!-- band 3 -->
+        <rect x="774" y="100" width="168" height="52" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="786" y="120" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">ActionRecorder</text>
+        <text x="786" y="138" font-size="9.5" fill="#A7B0BC">조작 실행</text>
+
+        <rect x="774" y="172" width="168" height="52" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="786" y="192" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">StateReader</text>
+        <text x="786" y="210" font-size="9.5" fill="#A7B0BC">화면 스냅샷</text>
+
+        <rect x="774" y="244" width="168" height="52" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="786" y="264" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">SceneStatePoller</text>
+        <text x="786" y="282" font-size="9.5" fill="#A7B0BC">0.1s 읽기 · 1s 배치</text>
+
+        <rect x="774" y="316" width="168" height="52" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="786" y="336" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">ScreenCapturer</text>
+        <text x="786" y="354" font-size="9.5" fill="#A7B0BC">요청 시에만</text>
+
+        <!-- gap 1 -->
+        <line x1="302" y1="126" x2="416" y2="126" stroke="#24C7E8" stroke-width="1.3" marker-end="url(#a7c)"/>
+        <text x="360" y="102" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#24C7E8">ACTION · STATUS · LOG</text>
+        <text x="360" y="115" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#24C7E8">TOOL · TOOL_RESULT</text>
+
+        <line x1="418" y1="196" x2="304" y2="196" stroke="#707B88" stroke-width="1.3" marker-end="url(#a7)"/>
+        <text x="360" y="172" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#A7B0BC">GAME_STATE · PULSE</text>
+        <text x="360" y="185" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#A7B0BC">ACTION_RESULT</text>
+
+        <line x1="302" y1="288" x2="416" y2="288" stroke="#24C7E8" stroke-width="1.3" marker-end="url(#a7c)"/>
+        <text x="360" y="277" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#24C7E8">KNOWLEDGE_* 요청</text>
+
+        <line x1="418" y1="342" x2="304" y2="342" stroke="#48C78E" stroke-width="1.3" marker-end="url(#a7g)"/>
+        <text x="360" y="331" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#48C78E">KNOWLEDGE_*_RESULT</text>
+
+        <line x1="418" y1="404" x2="304" y2="404" stroke="#FF634F" stroke-width="1.3" marker-end="url(#a7)"/>
+        <text x="360" y="393" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#FF634F">CANCEL</text>
+
+        <!-- gap 2 -->
+        <line x1="642" y1="126" x2="756" y2="126" stroke="#24C7E8" stroke-width="1.3" marker-end="url(#a7c)"/>
+        <text x="699" y="115" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#24C7E8">actions[] · /ws/sdk</text>
+
+        <line x1="758" y1="196" x2="644" y2="196" stroke="#707B88" stroke-width="1.3" marker-end="url(#a7)"/>
+        <text x="699" y="172" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#A7B0BC">state · pulse</text>
+        <text x="699" y="185" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#A7B0BC">action result</text>
+
+        <line x1="642" y1="342" x2="756" y2="342" stroke="#707B88" stroke-width="1.3" marker-end="url(#a7)"/>
+        <text x="699" y="331" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#A7B0BC">capture 요청</text>
+      </svg></div></figure>
+</section>
+
+<section id="s4">
+  <div class="eyebrow">04</div>
+  <h2>pulse</h2>
+
+  <div class="scroller">
+  <table>
+    <tbody>
+      <tr><td>읽는 주기</td><td class="mono">0.1s</td><td>SDK 가 감시 중인 멤버를 읽습니다</td></tr>
+      <tr><td>보내는 주기</td><td class="mono">1s</td><td>0.1s reading 10개를 한 프레임에 모아 보냅니다</td></tr>
+      <tr><td>보내는 범위</td><td class="mono">변한 것만</td><td>직전 값과 다른 멤버만 <code>changed</code> 에 싣습니다</td></tr>
+      <tr><td>중계</td><td class="mono">변환 없음</td><td>artel-orchestration-server 는 <code>jsonb</code> 로 적재하고 그대로 넘깁니다</td></tr>
+      <tr><td>문맥 보관</td><td class="mono">10 reading</td><td>도착 순서대로 보관합니다. 한 줄에 이름을 적는 키는 최대 8개입니다</td></tr>
+      <tr><td>키 추적</td><td class="mono">4096</td><td>보고가 끊긴 뒤에도 유지합니다. 변화 횟수를 세는 데 씁니다</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="cards">
+    <div class="card cyan">
+      <h3>whole 이 두 종류를 가릅니다</h3>
+      <p><code>whole=true</code> 는 전량입니다. 첫 reading, scene 변경, 전달 유실 후에 옵니다.
+      <code>whole=false</code> 는 delta 이고 기존 값 위에 얹힙니다.
+      언급되지 않은 오브젝트는 값도 소속 목록도 그대로 유지됩니다.</p>
+    </div>
+    <div class="card">
+      <h3>값은 해석하지 않습니다</h3>
+      <p><code>flag == 1</code> 이 무슨 뜻인지는 명세를 쓴 쪽의 몫입니다.
+      여기서 해석하면 게임과 판정 사이에 두 번째 의견이 끼어듭니다.</p>
+    </div>
+    <div class="card amber">
+      <h3>전량 reading 은 약 18KB 입니다</h3>
+      <p>10개를 통째로 실으면 그것만으로 프롬프트가 찹니다.
+      그래서 문맥에는 reading 별 한 줄만 남깁니다.</p>
+    </div>
+  </div>
+
+  <div class="exrow">
+    <div class="ex in"><span class="k">PULSE 프레임 — SDK 가 보낸 그대로</span><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;reading&quot;: 2,              // 몇 번째 판독인가
+  &quot;frame&quot;:   8203,           // 그 시점의 Unity 프레임
+  &quot;scene&quot;:   &quot;TurnBattleScene&quot;,
+  &quot;whole&quot;:   false,          // false = delta, true = 전량
+  &quot;changed&quot;: [&quot;EnemyHp.current&quot;, &quot;TurnCounter.turn&quot;],
+  &quot;active&quot;: [
+    { &quot;path&quot;:     &quot;/Battle/Enemy&quot;,
+      &quot;selector&quot;: &quot;Battle[0]/Enemy[0]&quot;,
+      &quot;members&quot;: [
+        { &quot;on&quot;: &quot;EnemyHp&quot;, &quot;member&quot;: &quot;current&quot;, &quot;value&quot;: 52 }
+      ] }
+  ],
+  &quot;deactive&quot;: [],            // 꺼진 오브젝트
+  &quot;gone&quot;:     [],            // 사라진 오브젝트
+  &quot;watching&quot;:    111,        // 감시 중인 멤버 수
+  &quot;unresolved&quot;:  0,
+  &quot;unwatchable&quot;: 2,          // 읽을 수 없는 멤버
+  &quot;gaps&quot;: []
+}</pre></div>
+    <div class="ex out"><span class="k">문맥에 실리는 모양</span><pre>&lt;&lt;pulse&gt;&gt;
+reading 2 · frame 8203 · scene TurnBattleScene
+could not read: 2
+
+readings since you last looked (last 10 kept):
+  1 (whole — 2 values reported)
+  2 (delta — EnemyHp.current, TurnCounter.turn)
+
+/Battle/Enemy:
+  EnemyHp.current = 52
+/Battle/UI/TurnLabel:
+  TurnCounter.turn = 4
+&lt;&lt;end pulse&gt;&gt;</pre></div>
+  </div>
+</section>
+
+<section id="s5">
+  <div class="eyebrow">05</div>
+  <h2>context 구성</h2>
+
+  <div class="cards">
+    <div class="card">
+      <h3>GAME_STATE <span class="tag">스냅샷</span></h3>
+      <p><code>SceneMemory</code> 가 프레임을 누적합니다. 사라진 것도 5 관측 동안 유지합니다.</p>
+    </div>
+    <div class="card">
+      <h3>PULSE <span class="tag">delta</span></h3>
+      <p>0.1초마다 읽어 변한 것만 보고합니다. 1초치를 모아 보냅니다.</p>
+    </div>
+    <div class="card">
+      <h3>scene context <span class="tag">scene 당 1회</span></h3>
+      <p>capability 는 최대 8줄, anchored knowledge 는 최대 6줄입니다.</p>
+    </div>
+  </div>
+
+  
+  <figure><div class="figwrap"><svg viewBox="0 0 900 404" role="img" aria-label="그래프 상태의 전체 메시지가 다섯 개의 middleware 를 지나면서, 이번 호출에만 적용되는 줄어든 메시지 목록으로 바뀐다." style="color:#A7B0BC">
+        <defs>
+          <marker id="a8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#707B88"/>
+          </marker>
+        </defs>
+
+        <text x="20" y="52" font-size="11" font-weight="600" fill="#F4F7FA">그래프 상태 (원본)</text>
+        <rect x="20" y="64" width="214" height="300" rx="6" fill="#10151B" stroke="#3B4857"/>
+        <rect x="34" y="78"  width="186" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="46" y="95"  font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">system prompt</text>
+        <rect x="34" y="112" width="186" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="46" y="129" font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">user — 스텝 계획</text>
+        <rect x="34" y="146" width="186" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="46" y="163" font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">ai — tool_calls</text>
+        <rect x="34" y="180" width="186" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="46" y="197" font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">tool — scene view #1</text>
+        <rect x="34" y="214" width="186" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="46" y="231" font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">tool — scene view #2</text>
+        <rect x="34" y="248" width="186" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="46" y="265" font-size="10" font-family="JetBrains Mono, monospace" fill="#707B88">…  #3 – #6</text>
+        <rect x="34" y="282" width="186" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="46" y="299" font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">tool — scene view #7</text>
+        <rect x="34" y="316" width="186" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="46" y="333" font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">ai — 판정</text>
+
+        <line x1="238" y1="210" x2="272" y2="210" stroke="#707B88" stroke-width="1.3" marker-end="url(#a8)"/>
+        <text x="255" y="228" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#707B88">messages</text>
+
+        <text x="278" y="52" font-size="11" font-weight="600" fill="#F4F7FA">middleware</text>
+        <rect x="278" y="64" width="300" height="48" rx="5" fill="#171D25" stroke="#8F7CF6"/>
+        <text x="292" y="84"  font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">compaction</text>
+        <text x="292" y="101" font-size="9.5" fill="#A7B0BC">문맥 포화 시 앞부분을 요약으로 교체</text>
+
+        <rect x="278" y="124" width="300" height="48" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="292" y="144" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">fold_scene_views</text>
+        <text x="292" y="161" font-size="9.5" fill="#A7B0BC">지난 scene view 를 한 줄로 축약</text>
+
+        <rect x="278" y="184" width="300" height="48" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="292" y="204" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">fold_knowledge_neighbours</text>
+        <text x="292" y="221" font-size="9.5" fill="#A7B0BC">검색이 함께 보낸 이웃 줄만 축약</text>
+
+        <rect x="278" y="244" width="300" height="48" rx="5" fill="#171D25" stroke="#24C7E8"/>
+        <text x="292" y="264" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">capture_vision</text>
+        <text x="292" y="281" font-size="9.5" fill="#A7B0BC">새 화면 첨부 · 오래된 이미지 제거</text>
+
+        <rect x="278" y="304" width="300" height="48" rx="5" fill="#171D25" stroke="#27313D"/>
+        <text x="292" y="324" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#F4F7FA">log_token_usage</text>
+        <text x="292" y="341" font-size="9.5" fill="#A7B0BC">최내곽 · 실제 전송량 측정</text>
+
+        <line x1="582" y1="210" x2="616" y2="210" stroke="#707B88" stroke-width="1.3" marker-end="url(#a8)"/>
+        <text x="599" y="228" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#707B88">override</text>
+
+        <text x="622" y="52" font-size="11" font-weight="600" fill="#F4F7FA">이번 호출의 messages</text>
+        <rect x="622" y="64" width="258" height="300" rx="6" fill="#10151B" stroke="#24C7E8"/>
+        <rect x="636" y="78"  width="230" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="648" y="95"  font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">system prompt</text>
+        <rect x="636" y="112" width="230" height="26" rx="3" fill="#171D25" stroke="#8F7CF6"/>
+        <text x="648" y="129" font-size="10" font-family="JetBrains Mono, monospace" fill="#8F7CF6">요약 1개 (앞부분 대체)</text>
+        <rect x="636" y="146" width="230" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="648" y="163" font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">ai — tool_calls</text>
+        <rect x="636" y="180" width="230" height="60" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="648" y="199" font-size="10" font-family="JetBrains Mono, monospace" fill="#707B88">tool — 축약 ×6</text>
+        <text x="648" y="216" font-size="9.5" fill="#707B88">축약된 자리. 관측 번호는</text>
+        <text x="648" y="230" font-size="9.5" fill="#707B88">남아 있어 대조 가능</text>
+        <rect x="636" y="248" width="230" height="26" rx="3" fill="#171D25" stroke="#48C78E"/>
+        <text x="648" y="265" font-size="10" font-family="JetBrains Mono, monospace" fill="#48C78E">tool — scene view #7 전문</text>
+        <rect x="636" y="282" width="230" height="26" rx="3" fill="#171D25" stroke="#24C7E8"/>
+        <text x="648" y="299" font-size="10" font-family="JetBrains Mono, monospace" fill="#24C7E8">이미지 — 최근 화면</text>
+        <rect x="636" y="316" width="230" height="26" rx="3" fill="#171D25" stroke="#27313D"/>
+        <text x="648" y="333" font-size="10" font-family="JetBrains Mono, monospace" fill="#A7B0BC">ai — 판정</text>
+      </svg></div></figure>
+</section>
+
+</main>
+
+<script>
+(function () {
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main > section'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var cur = document.getElementById('cur');
+  var bar = document.getElementById('progress');
+  var active = -1;
+
+  function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+  function setActive(i) {
+    if (i === active) return;
+    active = i;
+    links.forEach(function (a, k) { a.classList.toggle('on', k === i); });
+    cur.textContent = pad(i);
+    bar.style.width = ((i / (sections.length - 1)) * 100) + '%';
+    var on = links[i];
+    if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
+  }
+
+  if ('IntersectionObserver' in window) {
+    var seen = new Map();
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { seen.set(e.target, e.intersectionRatio); });
+      var best = -1, bestRatio = 0;
+      sections.forEach(function (s, i) {
+        var r = seen.get(s) || 0;
+        if (r > bestRatio) { bestRatio = r; best = i; }
+      });
+      if (best >= 0) setActive(best);
+    }, { rootMargin: '-48px 0px -55% 0px', threshold: [0, .12, .3, .6, 1] });
+    sections.forEach(function (s) { io.observe(s); });
+  }
+
+  function go(delta) {
+    var next = Math.min(sections.length - 1, Math.max(0, active + delta));
+    sections[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActive(next);
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    var k = e.key;
+    if (k === 'ArrowDown' || k === 'PageDown' || k === 'j' || k === 'J') { e.preventDefault(); go(1); }
+    else if (k === 'ArrowUp' || k === 'PageUp' || k === 'k' || k === 'K') { e.preventDefault(); go(-1); }
+    else if (k === 'Home') { e.preventDefault(); go(-sections.length); }
+    else if (k === 'End') { e.preventDefault(); go(sections.length); }
+  });
+
+  links.forEach(function (a, i) { a.addEventListener('click', function () { setActive(i); }); });
+  setActive(0);
+})();
+</script>

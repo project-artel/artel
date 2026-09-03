@@ -1,0 +1,32 @@
+[submodule "admin-page"]
+	path = admin-page
+	url = https://github.com/project-artel/admin-page
+	branch = main
+[submodule "artel-agent-server"]
+	path = artel-agent-server
+	url = https://github.com/project-artel/artel-agent-server.git
+	branch = develop
+[submodule "artel-home"]
+	path = artel-home
+	url = https://github.com/project-artel/artel-home
+	branch = develop
+[submodule "artel-orchestration-server"]
+	path = artel-orchestration-server
+	url = https://github.com/project-artel/artel-orchestration-server.git
+	branch = develop
+[submodule "artel-sdk"]
+	path = artel-sdk
+	url = https://github.com/project-artel/artel-sdk.git
+	branch = develop
+[submodule "insomnia-api"]
+	path = insomnia-api
+	url = https://github.com/project-artel/insomnia-api.git
+	branch = master
+[submodule "onboarding"]
+	path = onboarding
+	url = https://github.com/project-artel/onboarding
+	branch = main
+[submodule ".github"]
+	path = .github
+	url = https://github.com/project-artel/.github.git
+	branch = main

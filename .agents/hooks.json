@@ -1,0 +1,11 @@
+{
+  "artel-workspace-probe": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "true",
+        "timeout": 5
+      }
+    ]
+  }
+}
