@@ -67,6 +67,19 @@ The third one no longer holds. The document said the SDK is not in the build sce
 now attaches itself in a development build; that was verified against a real build on
 2026-09-03. Nothing has to be added to a scene.
 
+- **Build with an SDK that installs the launch session.** `artel game start` hands the game its
+  token and project through the environment, and `ArtelLaunchArguments.InstallSession` is what
+  reads them. An older build has `SpawnInDevelopmentBuilds` but not that, so it launches, runs,
+  and never registers — `artel game start` then fails with `game_registration_timeout` after 60
+  seconds and the game log holds no `[Artel]` line at all. Check the build before blaming the
+  server:
+
+  ```sh
+  strings -a <build>/WordVenture_Data/Managed/Artel.Runtime.dll | grep -c InstallLaunchSession
+  ```
+
+  `0` means rebuild. A 2026-08-17 build gives `0`; a 2026-09-03 one gives a match.
+
 ## Run order, and why it cannot be shuffled
 
 The probe has to be first. Its first step checks that the continue button is absent on a
