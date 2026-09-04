@@ -124,6 +124,44 @@ one makes it fail:
 
 One build per slot, not per arm.
 
+### Making the slots
+
+Flip `productName`, build, put it back. The `.bak` dance matters — leaving the
+project on a changed product name means the next person's build silently lands
+in a different registry key than they expect.
+
+```bash
+P=<project>/ProjectSettings/ProjectSettings.asset
+for S in B C D; do
+  cp "$P" "$P.bak"
+  sed -i "s/^  productName: WordVenture$/  productName: WordVenture$S/" "$P"
+  "<Unity.exe>" -batchmode -quit -nographics \
+    -projectPath "<project>" -executeMethod ArtelBenchBuild.BuildWindows64 \
+    -artelBuildPath "C:\path\BuildBench$S\WordVenture.exe" \
+    -logFile "C:\path\BuildBench$S\build.log"
+  mv "$P.bak" "$P"
+done
+```
+
+Twenty to thirty seconds each once the Library is warm. Keep `bundleVersion`
+alone so they all stay one `game_build`.
+
+### Build one more slot than you need
+
+**Another session on the same machine will take your game.** Two sessions that
+each launch "the" build register the same `sdk_uuid`, so the second one's SDK
+connection replaces the first's, and the run that was already going dies with
+`ERROR {"reason": "SDK connection closed."}` and no verdict — `steps_total` and
+`steps_passed` come back NULL. It reads like a crash and is not one.
+
+That happened here on 2026-09-04: two runs ended at exactly the same wall-clock
+second with no verdict, which is the signature. Identical durations across
+independent runs mean something outside them ended both.
+
+So claim slots nobody else is using rather than sharing `BuildBench` and
+`BuildBenchB` by convention. Naming them for the session or the experiment costs
+nothing and the collision is silent until you read the frames.
+
 ## Seeding the benchmark
 
 `benchmarks/wordventure/` in the monorepo holds the material; its `README.md`
