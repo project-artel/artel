@@ -1,0 +1,56 @@
+[
+  {
+    "action": "새 게임을 시작한다",
+    "tc": 9101,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "오프닝을 지나 맵 씬까지 간다",
+    "tc": 9102,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "마을 노드의 스테이지에 입장한다",
+    "tc": 9103,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "평원 스테이지를 클리어한다",
+    "tc": 9110,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "클리어 화면을 지나 맵으로 돌아간다",
+    "tc": 9111,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "스테이지 번호가 올랐는지 확인한다",
+    "tc": 9112,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "다음 노드로 이동해 입장한다",
+    "tc": 9113,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "바다 스테이지를 클리어한다",
+    "tc": 9114,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "맵으로 돌아와 스테이지 번호를 확인한다",
+    "tc": 9112,
+    "hint": null,
+    "input": null
+  }
+]

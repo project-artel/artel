@@ -1,0 +1,38 @@
+[
+  {
+    "step": 1,
+    "expected_passed": false
+  },
+  {
+    "step": 2,
+    "expected_passed": true
+  },
+  {
+    "step": 3,
+    "expected_passed": true
+  },
+  {
+    "step": 4,
+    "expected_passed": true
+  },
+  {
+    "step": 5,
+    "expected_passed": true
+  },
+  {
+    "step": 6,
+    "expected_passed": true
+  },
+  {
+    "step": 7,
+    "expected_passed": true
+  },
+  {
+    "step": 8,
+    "expected_passed": true
+  },
+  {
+    "step": 9,
+    "expected_passed": false
+  }
+]

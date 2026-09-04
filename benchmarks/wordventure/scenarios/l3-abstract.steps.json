@@ -1,0 +1,86 @@
+[
+  {
+    "action": "게임을 시작해 첫 스테이지에 입장한다",
+    "tc": 9103,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "평원 스테이지를 클리어하고 맵으로 돌아간다",
+    "tc": 9110,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "바다 스테이지를 클리어한다",
+    "tc": 9114,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "고원 스테이지를 클리어한다",
+    "tc": 9115,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "비 스테이지를 클리어한다",
+    "tc": 9116,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "보스 노드로 이동해 입장한다",
+    "tc": 9118,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "손패에 이전에는 없던 속성이 나오는지 확인한다",
+    "tc": 9117,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "보스 스테이지 첫 웨이브의 적에게 회복 속성으로 공격한다",
+    "tc": 9137,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "보스 스테이지의 앞 세 웨이브를 격파한다",
+    "tc": 9119,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "플레이어 HP 가 낮아지면 회복 속성을 플레이어 자신에게 시전한다",
+    "tc": 9120,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "최종 보스에게 Shoot 과 Fire 조합을 두 번 시전한다",
+    "tc": 9138,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "최종 보스를 격파한다",
+    "tc": 9121,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "엔딩을 끝까지 진행한다",
+    "tc": 9122,
+    "hint": null,
+    "input": null
+  },
+  {
+    "action": "타이틀 화면으로 돌아왔는지 확인한다",
+    "tc": 9123,
+    "hint": null,
+    "input": null
+  }
+]
