@@ -1,0 +1,247 @@
+[
+  {
+    "tc": 9101,
+    "scene": "TitleScene",
+    "step": "새 게임 버튼을 눌러 게임을 시작한다",
+    "precondition": "타이틀 화면이 표시되어 있다",
+    "expectedValue": "스토리 씬이 로드된다"
+  },
+  {
+    "tc": 9102,
+    "scene": "StoryScene",
+    "step": "오프닝 대사를 끝까지 진행한다",
+    "precondition": "오프닝이 재생 중이다",
+    "expectedValue": "맵 씬이 로드된다"
+  },
+  {
+    "tc": 9103,
+    "scene": "Map_scene",
+    "step": "현재 노드에서 스테이지에 입장한다",
+    "precondition": "캐릭터가 마을 노드에 있다",
+    "expectedValue": "평원 배경의 전투 씬이 로드된다"
+  },
+  {
+    "tc": 9104,
+    "scene": "TurnBattleScene",
+    "step": "튜토리얼 대사를 진행한다",
+    "precondition": "첫 스테이지이고 튜토리얼 대사창이 떠 있다",
+    "expectedValue": "대사창이 닫히고 카드와 버튼이 다시 입력을 받는다"
+  },
+  {
+    "tc": 9105,
+    "scene": "TurnBattleScene",
+    "step": "조합 버튼을 눌러 조합 패널을 연다",
+    "precondition": "플레이어 턴이다",
+    "expectedValue": "조합 패널이 열린다"
+  },
+  {
+    "tc": 9106,
+    "scene": "TurnBattleScene",
+    "step": "spell 카드와 element 카드를 각각 슬롯에 넣는다",
+    "precondition": "조합 패널이 열려 있고 손패에 두 종류의 카드가 있다",
+    "expectedValue": "두 슬롯이 모두 채워지고 발동 버튼이 나타난다"
+  },
+  {
+    "tc": 9107,
+    "scene": "TurnBattleScene",
+    "step": "주문을 발동하고 적을 대상으로 지정한다",
+    "precondition": "두 슬롯이 모두 채워져 있다",
+    "expectedValue": "지정한 적에게 주문이 시전된다"
+  },
+  {
+    "tc": 9108,
+    "scene": "TurnBattleScene",
+    "step": "명중한 적의 남은 HP 를 읽는다",
+    "precondition": "주문이 적에게 명중했다",
+    "expectedValue": "해당 속성의 배율만큼 적 HP 가 줄어 있다"
+  },
+  {
+    "tc": 9109,
+    "scene": "TurnBattleScene",
+    "step": "턴을 종료한다",
+    "precondition": "플레이어 턴이다",
+    "expectedValue": "적이 행동한 뒤 플레이어가 다시 카드를 뽑는다"
+  },
+  {
+    "tc": 9110,
+    "scene": "TurnBattleScene",
+    "step": "평원 스테이지의 모든 웨이브를 격파한다",
+    "precondition": "평원 스테이지 전투 중이다",
+    "expectedValue": "클리어 화면이 표시된다"
+  },
+  {
+    "tc": 9111,
+    "scene": "GameClearScene",
+    "step": "보상을 확인하고 맵으로 돌아간다",
+    "precondition": "스테이지를 클리어했다",
+    "expectedValue": "보상 카드가 표시된 뒤 맵 씬이 로드된다"
+  },
+  {
+    "tc": 9112,
+    "scene": "Map_scene",
+    "step": "현재 스테이지 번호를 읽는다",
+    "precondition": "방금 스테이지를 클리어했다",
+    "expectedValue": "스테이지 번호가 직전보다 1 크다"
+  },
+  {
+    "tc": 9113,
+    "scene": "Map_scene",
+    "step": "다음 노드로 이동해 입장한다",
+    "precondition": "진행도가 다음 노드를 허용한다",
+    "expectedValue": "다음 스테이지가 로드된다"
+  },
+  {
+    "tc": 9114,
+    "scene": "TurnBattleScene",
+    "step": "바다 스테이지의 모든 웨이브를 격파한다",
+    "precondition": "바다 스테이지 전투 중이다",
+    "expectedValue": "클리어 화면이 표시된다"
+  },
+  {
+    "tc": 9115,
+    "scene": "TurnBattleScene",
+    "step": "고원 스테이지의 모든 웨이브를 격파한다",
+    "precondition": "고원 스테이지 전투 중이다",
+    "expectedValue": "클리어 화면이 표시된다"
+  },
+  {
+    "tc": 9116,
+    "scene": "TurnBattleScene",
+    "step": "비 스테이지의 모든 웨이브를 격파한다",
+    "precondition": "비 스테이지 전투 중이다",
+    "expectedValue": "클리어 화면이 표시된다"
+  },
+  {
+    "tc": 9117,
+    "scene": "TurnBattleScene",
+    "step": "여러 턴에 걸쳐 뽑히는 카드를 확인한다",
+    "precondition": "진행도가 보스 노드까지 열려 있다",
+    "expectedValue": "이전 스테이지에서는 나오지 않던 속성 카드가 손패에 등장한다"
+  },
+  {
+    "tc": 9118,
+    "scene": "Map_scene",
+    "step": "보스 노드로 이동해 입장한다",
+    "precondition": "진행도가 보스 노드를 허용한다",
+    "expectedValue": "보스 스테이지가 로드된다"
+  },
+  {
+    "tc": 9119,
+    "scene": "TurnBattleScene",
+    "step": "보스 스테이지의 앞 세 웨이브를 격파한다",
+    "precondition": "보스 스테이지 전투 중이다",
+    "expectedValue": "마지막 웨이브가 스폰된다"
+  },
+  {
+    "tc": 9120,
+    "scene": "TurnBattleScene",
+    "step": "회복 속성을 플레이어 자신에게 시전한다",
+    "precondition": "플레이어 HP 가 최대치보다 낮다",
+    "expectedValue": "플레이어 HP 가 증가한다"
+  },
+  {
+    "tc": 9121,
+    "scene": "TurnBattleScene",
+    "step": "최종 보스를 격파한다",
+    "precondition": "최종 보스가 스폰되어 있다",
+    "expectedValue": "클리어 화면이 표시된다"
+  },
+  {
+    "tc": 9122,
+    "scene": "EndingScene",
+    "step": "엔딩을 끝까지 진행한다",
+    "precondition": "최종 보스를 격파했다",
+    "expectedValue": "엔딩이 끝난다"
+  },
+  {
+    "tc": 9123,
+    "scene": "TitleScene",
+    "step": "엔딩 종료 후 화면을 확인한다",
+    "precondition": "엔딩이 끝났다",
+    "expectedValue": "타이틀 화면이 표시된다"
+  },
+  {
+    "tc": 9124,
+    "scene": "TurnBattleScene",
+    "step": "주문 발동 직후 이어지는 안내 대사를 모두 넘긴다",
+    "precondition": "주문을 발동했고 안내 대사가 떠 있다",
+    "expectedValue": "대사창이 닫히고 적을 대상으로 지정할 수 있게 된다"
+  },
+  {
+    "tc": 9125,
+    "scene": "TurnBattleScene",
+    "step": "조합·발동·대상 선택·턴 종료를 반복해 첫 웨이브를 정리한다",
+    "precondition": "평원 스테이지 첫 웨이브 전투 중이다",
+    "expectedValue": "첫 웨이브의 적이 모두 사라지고 다음 웨이브가 나온다"
+  },
+  {
+    "tc": 9131,
+    "scene": "TurnBattleScene",
+    "step": "튜토리얼 대사창을 마우스로 클릭해 다음으로 넘긴다",
+    "precondition": "튜토리얼 대사창이 떠 있다",
+    "expectedValue": "다음 대사로 넘어간다"
+  },
+  {
+    "tc": 9132,
+    "scene": "TurnBattleScene",
+    "step": "대사창이 떠 있는 동안 손패의 카드를 클릭한다",
+    "precondition": "튜토리얼 대사창이 떠 있다",
+    "expectedValue": "카드가 선택되어 확대된다"
+  },
+  {
+    "tc": 9133,
+    "scene": "Map_scene",
+    "step": "아직 열리지 않은 다음 노드로 오른쪽 방향키를 눌러 이동한다",
+    "precondition": "진행도가 0 이고 캐릭터가 마을 노드에 있다",
+    "expectedValue": "캐릭터가 다음 노드로 이동한다"
+  },
+  {
+    "tc": 9134,
+    "scene": "TurnBattleScene",
+    "step": "spell 카드 두 장을 같은 슬롯에 넣는다",
+    "precondition": "조합 패널이 열려 있고 손패에 spell 카드가 두 장 있다",
+    "expectedValue": "두 장 모두 슬롯에 놓인다"
+  },
+  {
+    "tc": 9135,
+    "scene": "TurnBattleScene",
+    "step": "spell 카드만 놓은 상태에서 발동 버튼을 확인한다",
+    "precondition": "왼쪽 슬롯에만 카드가 놓여 있다",
+    "expectedValue": "발동 버튼이 눌릴 수 있는 상태로 표시된다"
+  },
+  {
+    "tc": 9136,
+    "scene": "TurnBattleScene",
+    "step": "발동 버튼을 누르기 전에 적을 클릭해 대상으로 지정한다",
+    "precondition": "조합 패널에 카드가 놓여 있고 아직 발동하지 않았다",
+    "expectedValue": "해당 적이 대상으로 지정된다"
+  },
+  {
+    "tc": 9137,
+    "scene": "TurnBattleScene",
+    "step": "보스 스테이지 첫 웨이브 적에게 회복 속성으로 공격한다",
+    "precondition": "보스 스테이지 첫 웨이브 전투 중이다",
+    "expectedValue": "적 HP 가 줄어든다"
+  },
+  {
+    "tc": 9138,
+    "scene": "TurnBattleScene",
+    "step": "최종 보스에게 Shoot + Fire 조합을 두 번 시전한다",
+    "precondition": "최종 보스가 스폰되어 있다",
+    "expectedValue": "최종 보스가 쓰러진다"
+  },
+  {
+    "tc": 9139,
+    "scene": "TitleScene",
+    "step": "세이브가 없는 상태에서 이어하기 버튼을 확인한다",
+    "precondition": "게임을 한 번도 플레이한 적이 없다",
+    "expectedValue": "이어하기 버튼이 표시된다"
+  },
+  {
+    "tc": 9140,
+    "scene": "TitleScene",
+    "step": "게임을 리셋한 뒤 이어하기로 재개한다",
+    "precondition": "스테이지를 하나 이상 클리어한 상태에서 게임을 리셋했다",
+    "expectedValue": "직전에 도달했던 스테이지에서 재개된다"
+  }
+]
