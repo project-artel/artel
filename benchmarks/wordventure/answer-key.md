@@ -30,7 +30,7 @@ and on going back, and `TitleSceneManager.Start` overwrites the static
 `MapMove.StagePosition` with that value. So a "start at the boss" scenario cannot exist.
 Every scenario starts at the title screen and gets as far as it can under its own power.
 
-## The 10 false-expectation steps
+## The 9 false-expectation steps
 
 The `expected_value` of these test cases states a plausible outcome that the game does not
 actually produce. The right-hand column is the reason the game refuses it; it is for whoever
@@ -46,7 +46,6 @@ scores the run and is not stored on the test case.
 | 9136 | L1 | 발동 전에 적을 클릭해 대상 지정 | `CastSpell` 전에는 `selectable=false` |
 | 9137 | L3 | 보스 첫 웨이브를 회복 속성으로 공격 | Holy vs Holy = −2.0, HP 가 오른다 |
 | 9138 | L3 | 최종 보스를 Shoot+Fire 두 방에 | 20 × 0.7 = 14 vs 80 HP |
-| 9139 | 프로브 | 새 설치에서 이어하기 버튼 기대 | `LoadPlayData() == -1` 이면 숨김 |
 | 9140 | 프로브 | 리셋 후 진행도 유지 기대 | 진행도는 새 게임·종료 때만 저장 |
 
 L2 has none. Putting a concrete negative step into an abstract scenario breaks that rung's
@@ -67,7 +66,7 @@ the continue button stays visible from then on. It is short enough to double as 
 
 | # | 행위 | TC | 기대 |
 | --- | --- | --- | --- |
-| 1 | 타이틀에서 이어하기 버튼이 있는지 확인 | 9139 | 실패 |
+| 1 | 타이틀에서 이어하기 버튼이 있는지 확인 | 9139 | 통과 |
 | 2 | 새 게임 버튼으로 시작 | 9101 | 통과 |
 | 3 | 오프닝 진행해 맵까지 | 9102 | 통과 |
 | 4 | 마을 노드 입장 | 9103 | 통과 |
