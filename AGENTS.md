@@ -2,8 +2,23 @@
 
 ## Documentation language
 
-- Write and maintain all project documentation in English.
-- Keep code identifiers, design tokens, API names, and technical terminology in their canonical English form.
+Two audiences, two languages. The directory settles which one a file is.
+
+| Path | Read by | Language |
+| --- | --- | --- |
+| `AGENTS.md`, `CLAUDE.md`, `.agents/**`, `.claude/**` | an agent | English |
+| `README.md`, `docs/**` | a person | Korean |
+
+- Instructions an agent is told to read are English. Every repository's `AGENTS.md` points
+  only into `.agents/docs/`, and nothing points an agent at `docs/` — that boundary already
+  holds, so keep it.
+- Documentation a person opens is Korean. `README.md` is the front door, and `docs/` holds
+  the architecture, protocol and decision records that a teammate reads.
+- Keep code identifiers, design tokens, API names, and technical terminology in their
+  canonical English form in both.
+- A document already written in the other language is not a defect to sweep. Rewrite it when
+  you are rewriting it anyway; leave it alone otherwise. `.plan/**` keeps whatever each plan
+  already uses.
 - Follow [`.agents/docs/git-language.md`](.agents/docs/git-language.md) when writing commits,
   pull requests, or issues.
 - Its `## Titles` section governs every title you write — commit subject, pull request title,
