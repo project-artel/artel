@@ -62,6 +62,73 @@ curl -s "http://localhost:8091/internal/projects/<p>/game-builds/<b>/scene-conte
   | python3 -m json.tool | head -20
 ```
 
+## A capture uploads from Windows, so MinIO has to be reachable from Windows
+
+**A vision arm whose pictures never arrive still finishes, still reports steps,
+and still looks like a result.** `_auto_capture` (`app/agents/qa/vision.py`)
+returns `None` for every failure the game can produce and deliberately tells the
+model nothing, so an `every_call` or `by_role` run whose uploads are failing
+reads exactly what an `on_demand` run reads.
+
+The upload does not go through orchestration. The game asks orchestration for a
+presigned ticket, then PUTs the JPEG straight to MinIO at whatever
+`ARTEL_S3_ENDPOINT` names. The game runs on **Windows** and MinIO runs in a
+container inside WSL, and those two do not automatically meet:
+
+```
+Windows -> 127.0.0.1:8080   orchestration, a native WSL process   reachable
+Windows -> 127.0.0.1:9100   MinIO, a docker-published port        NOT reachable
+```
+
+Unreachable, the SDK answers the action with
+`"error": "The capture upload failed (HTTP 0)."` — Unity's HTTP 0 is a
+connection that never opened — and the turn goes on with no picture.
+
+### Never check this with `localhost`
+
+On Windows `localhost` resolves to `::1` first and does not reach WSL, so every
+port looks dead, including the ones that work. Use `127.0.0.1` in every check
+and in every `.env` value. Six ports were probed through `localhost` here on
+2026-09-18 and all six read as blocked; only one of them actually was.
+
+### The fix: a native listener in front of MinIO
+
+Native WSL listeners are reachable from Windows and docker-published ones are
+not, so put a transparent TCP relay in front of MinIO and sign for that. It has
+to be transparent: the `Host` header must survive or the S3 signature stops
+validating.
+
+```bash
+python3 relay.py 9101            # 0.0.0.0:9101 -> 127.0.0.1:9100, any TCP proxy will do
+# artel-orchestration-server/.env
+ARTEL_S3_ENDPOINT=http://127.0.0.1:9101
+```
+
+Restart orchestration afterwards — that value is what presigned URLs are signed
+for. The relay is a process, not a service: check it is alive before every run.
+
+### Three checks worth more than the run they protect
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 http://127.0.0.1:9101/minio/health/live
+```
+
+```sql
+SELECT count(*) FILTER (WHERE type = 'SCREENSHOT')                            AS arrived,
+       count(*) FILTER (WHERE payload::text LIKE '%upload failed (HTTP 0)%')  AS refused
+FROM qa_log WHERE qa_try_id = <id>;
+```
+
+And the cheapest tell of all, readable after the fact: **the cache hit rate says
+whether pictures rode.** ARTEL-868 measured `on_demand` reading 97.3% of its
+input from cache and `every_call` reading 1.3%, with the bill going from $0.87
+to $14.22. An `every_call` arm sitting at 97% carried no pictures at all.
+
+That is how this was caught on 2026-09-18, and only after the runs were done:
+27 runs across three capture arms, 1,013 automatic captures, 0 pictures, and
+three arms whose numbers differed by sampling alone. Every run produced a
+verdict, which is why nothing looked wrong.
+
 ## Build the game
 
 **A build that does not carry the launch session never registers.** `artel game
