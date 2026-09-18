@@ -207,14 +207,95 @@ takes the axes directly:
 - **`label` carries the experiment name only.** What the arm *is* comes from
   `run_config`; writing it in the label too puts one fact in two places.
 
+## Launching several slots at once races on the instance id
+
+`artel game start` resolves which `game_instance` it just launched by diffing
+the project's whole instance list, so two slots registering at the same moment
+each pick up the other's row. Launch four and all four can come back with the
+same `instanceId` — then `--force` makes each run kill the one before it, and
+`qa_try` rows end `CANCELLED` about a second after they start.
+
+Both sessions measuring on 2026-09-18 hit this independently. The symptom reads
+like a crash and is not one; check it by eye before spending a batch:
+
+```bash
+artel game start ... --json | tail -1 | python3 -c "import json,sys; print(json.load(sys.stdin)['instanceId'])"
+```
+
+Serialize the launch and leave the runs parallel — registration is the only part
+that must not overlap:
+
+```bash
+INST=$(flock /tmp/artel-gamestart.lock -c "artel game start ... --json" \
+       | tail -1 | python3 -c "import json,sys; print(json.load(sys.stdin)['instanceId'])")
+```
+
+Four slots then come back 5, 6, 7, 9 instead of 7, 7, 7, 7. This is separate
+from killing the game by window title (project-artel/artel#8); that one is about
+the run *after* this one starting in the wrong place.
+
 ## Reading the result — and what you cannot read
 
+**`steps_passed` is not a score. Never report it as one.**
+
+L1 is 24 steps of which **6 are expected to fail** (`expected_passed: false`).
+An honest perfect run therefore scores `steps_passed = 18`, and **`24/24` means
+the agent reported every false expectation as passed** — which is the single
+behaviour this benchmark was built to catch. `wordventure/README.md`: "the
+strategy of answering 'passed' to everything gets a perfect score. These nine
+are how a run gets caught doing that." Reading `steps_passed` as depth has
+already put wrong tables into a pull request and a Notion page (2026-09-18).
+
+Score against the answer key instead. Two numbers, not one:
+
 ```sql
-SELECT qr.id, qr.label, qt.status, qt.steps_passed || '/' || qt.steps_total,
-       qt.completed_at - qt.started_at AS took, qt.run_config->>'content_map_mode',
-       qt.run_config->>'knowledge_mode'
-FROM qa_run qr JOIN qa_try qt ON qt.qa_run_id = qr.id ORDER BY qr.id;
+WITH labels AS (
+  SELECT ord::int AS step, (st->>'expected_passed')::boolean AS expected
+  FROM test_scenario s, LATERAL jsonb_array_elements(s.steps)
+       WITH ORDINALITY AS t(st, ord)
+  WHERE s.id = <scenario-id>),
+raw AS (
+  SELECT qt.id AS try_id, qt.run_config->>'agent_arch' AS arm,
+         (l.payload->'args'->>'step')::int AS step,
+         (l.payload->'args'->>'passed')::boolean AS reported,
+         row_number() OVER (PARTITION BY qt.id, (l.payload->'args'->>'step')::int
+                            ORDER BY l.id DESC) AS rn
+  FROM qa_log l JOIN qa_try qt ON qt.id = l.qa_try_id
+                JOIN qa_run qr ON qr.id = qt.qa_run_id
+  WHERE qr.label = '<experiment>'
+    AND l.type = 'TOOL' AND l.payload->>'tool' = 'report_step'
+    AND l.payload->'args'->>'step' ~ '^[0-9]+$'
+    AND (l.payload->'args'->>'step')::int BETWEEN 1 AND <steps>),
+last AS (SELECT * FROM raw WHERE rn = 1),
+per_run AS (
+  SELECT r.try_id, r.arm, count(*) AS judged,
+         count(*) FILTER (WHERE lb.expected = r.reported) AS agree,
+         count(*) FILTER (WHERE NOT lb.expected AND NOT r.reported) AS correct_fail,
+         count(*) FILTER (WHERE NOT lb.expected AND r.reported) AS miss,
+         count(*) FILTER (WHERE lb.expected AND NOT r.reported) AS false_alarm
+  FROM last r JOIN labels lb ON lb.step = r.step GROUP BY 1, 2)
+SELECT arm, count(*) AS runs, round(avg(judged)::numeric, 1) AS judged,
+       round(avg(agree)::numeric, 1) AS agree_of_total,
+       round(100.0 * avg(agree) / avg(judged), 1) AS accuracy_pct,
+       round(avg(correct_fail)::numeric, 1) AS correct_fail,
+       round(avg(miss)::numeric, 1) AS miss,
+       round(avg(false_alarm)::numeric, 1) AS false_alarm
+FROM per_run GROUP BY 1 ORDER BY 5 DESC;
 ```
+
+Three things that query does and a hand-written one usually does not:
+
+- **Deduplicates.** *Some* runs report the same step more than once — measured
+  at 28 verdicts on a 24-step scenario in one batch, and at zero across another
+  batch of 18 runs, so do not expect it either way. `QaRunState` appends to
+  `step_results` and `steps_passed` counts that list, so **when it happens the
+  stored `steps_passed` is inflated by it and nothing says so.** Take the last
+  verdict per step and the question stops mattering.
+- **Bounds the step number.** Values outside `1..N` arrive.
+- **Reports two numbers.** `agree_of_total` counts an unjudged step as not
+  correct, which penalises a run that stopped early; `accuracy_pct` asks only
+  about the steps it did judge. A run that judged 15 of 24 at 70% and one that
+  judged 24 at 70% are different results, and one number hides which you have.
 
 `qa_try.status = FAILED` is a verdict, not a crash. Read the closing `STATUS`
 frame in `qa_log` for what the agent said about itself.
