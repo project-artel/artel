@@ -162,6 +162,54 @@ So claim slots nobody else is using rather than sharing `BuildBench` and
 `BuildBenchB` by convention. Naming them for the session or the experiment costs
 nothing and the collision is silent until you read the frames.
 
+### Kill a slot's game by window title, not by the pid `game start` returns
+
+**The `pid` in `artel game start --json` is the WSL-side launcher, not
+`WordVenture.exe`.** Killing it leaves the game running and still holding its
+instance's SDK WebSocket. When that slot launches again it presents the same
+`sdk_uuid` — `PlayerPrefs` is keyed by `productName`, so a slot's uuid is stable
+across launches — and orchestration turns the new game away:
+
+```
+WARN k.a.o.sdk.service.SdkWebSocketHandler : 웹소켓 연결 거부: 이미 연결된 게임 인스턴스 - instanceId: 2
+```
+
+The refused game logs `InvalidOperationException: WebSocket client is not
+connected` and never registers, **and the run drives the old game** — the one
+still standing where the previous run stopped. Only the first run of each slot
+starts from the title screen. Every run after it breaks "relaunch the game
+between arms" below without saying so.
+
+Unity sets the window title to `productName`, which is already unique per slot,
+so that is the handle:
+
+```bash
+PRODUCT=$(sed -n '2p' <slot>/WordVenture_Data/app.info)   # line 1 is companyName
+taskkill.exe /F /FI "WINDOWTITLE eq $PRODUCT"
+```
+
+Kill **before** each launch as well as after each run. Killing only afterwards
+leaves a slot occupied whenever a run crashed, timed out, or was interrupted.
+
+**This is not the `productName` collision above, and the check for that one does
+not catch it.** Shared product names collapse every slot into one
+`game_instance` with one `sdk_uuid`. Here the uuids are correctly distinct, one
+per slot, and the two processes fighting belong to the **same** slot. Count
+processes against slots instead:
+
+```bash
+# the window title is the LAST CSV field; do not index from the left, because
+# `Mem Usage` is printed with a thousands separator ("475,372 K") and shifts it
+tasklist.exe /V /FI "IMAGENAME eq WordVenture.exe" /FO CSV \
+  | tail -n +2 | rev | cut -d, -f1 | rev | sort | uniq -c
+```
+
+One line per window title, count 1 each. Anything higher means games are
+leaking. On 2026-09-18 this ran undetected through two benchmark attempts —
+7 slots, 11 processes, 30 refusals in `orch.log` — because the runs kept
+producing verdicts and only the first per slot was clean. `grep -c '웹소켓 연결
+거부' orch.log` is the cheap check; it must stay 0.
+
 ## Seeding the benchmark
 
 `benchmarks/wordventure/` in the monorepo holds the material; its `README.md`
@@ -199,7 +247,8 @@ takes the axes directly:
 
 - **Relaunch the game between arms.** A finished run leaves the game wherever it
   stopped, and the next arm's first step ("observe the title screen") then starts
-  from a battle scene. That difference is not the arm.
+  from a battle scene. That difference is not the arm. Killing the launcher pid
+  does not do this — see "Kill a slot's game by window title" above.
 - **`frozen`, not `on`, for measurement runs.** `on` lets the run write
   `verdict` rows into the content map and `knowledge` into the store, so a second
   run of the same arm reads what the first one left. Repetition stops being
