@@ -1,14 +1,32 @@
 # ARTEL self-hosted stack. Needs Docker Compose 2.23.1 or later (the Caddy configuration below is inlined).
 #
-#   1. Save this file and .env.example in one directory.
-#   2. cp .env.example .env   and edit it. Replace every __GENERATE_...__ value (openssl rand -hex 32).
-#   3. docker compose up -d   and open ARTEL_PUBLIC_URL (default http://localhost:8088).
+# Easiest: run install.sh, which saves this file and fills in the secrets below.
+# By hand: save this file, replace every CHANGE_ME below (generate each with: openssl rand -hex 32),
+# then run: docker compose up -d   and open the public URL. The first account to sign up becomes the admin;
+# the admin page sets the OpenRouter key.
 #
-# The first account to sign up becomes the admin; the admin page (default http://localhost:8090) sets the OpenRouter key.
-# Only the __GENERATE_...__ secrets in .env must change; everything else has a working default.
+# This file holds secrets once you edit it. Do not commit it or share it. Back it up: if
+# x-secrets-key is lost or changed, the OpenRouter key saved on the admin page cannot be read.
 # The build sections only matter in a clone of the repository: `docker compose build orchestration agent-server`.
 
 name: artel
+
+# ---- Edit these. Each value is written once and used by the services that need it. ----
+# Public URL of the console, no trailing slash. To change the host port or name, change the URL and the
+# published ports of the proxy service (and the Caddy site addresses at the bottom) together.
+x-public-url: &public_url http://localhost:8088
+# URL of the admin page. Keep the same host name as the public URL so one login works on both.
+x-admin-url: &admin_url http://localhost:8090
+# Signs session tokens. At least 32 bytes: the server refuses to start with the placeholder.
+x-jwt-secret: &jwt_secret CHANGE_ME
+# Encrypts the OpenRouter key saved on the admin page. Never change it after first start.
+x-secrets-key: &secrets_key CHANGE_ME
+x-db-password: &db_password CHANGE_ME
+# MinIO root user and password (object storage for uploads), at least 3 and 8 characters.
+x-s3-access-key: &s3_access_key CHANGE_ME
+x-s3-secret-key: &s3_secret_key CHANGE_ME
+# Optional. A single OpenRouter key covers every model; the admin page can set it instead and wins.
+x-openrouter-api-key: &openrouter_api_key ""
 
 x-restart: &restart
   restart: unless-stopped
@@ -19,13 +37,13 @@ services:
     # Must be the pgvector image: a Flyway migration runs CREATE EXTENSION vector.
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: ${DB_NAME:-artel}
-      POSTGRES_USER: ${DB_USERNAME:-artel}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      POSTGRES_DB: artel
+      POSTGRES_USER: artel
+      POSTGRES_PASSWORD: *db_password
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U artel -d artel"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -34,7 +52,6 @@ services:
     <<: *restart
     # Holds only five-minute SDK login codes, so persistence stays off on purpose.
     # Valkey, not Redis: current Redis 7.x tags are RSALv2/SSPLv1, which does not fit an AGPL-3.0 release.
-    # It speaks the same protocol, so the service name and REDIS_URL stay as they were.
     image: valkey/valkey:8.1.10-alpine
     command: ["valkey-server", "--save", "", "--appendonly", "no"]
     healthcheck:
@@ -45,34 +62,35 @@ services:
 
   minio:
     <<: *restart
-    # Docker Hub no longer serves minio/minio, so the default is the Chainguard build. Override with
-    # ARTEL_MINIO_IMAGE if you mirror another build.
-    image: ${ARTEL_MINIO_IMAGE:-cgr.dev/chainguard/minio:latest}
+    # Docker Hub no longer serves minio/minio, so this is the Chainguard build.
+    image: cgr.dev/chainguard/minio:latest
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
-      MINIO_ROOT_USER: ${ARTEL_S3_ACCESS_KEY:?set ARTEL_S3_ACCESS_KEY in .env}
-      MINIO_ROOT_PASSWORD: ${ARTEL_S3_SECRET_KEY:?set ARTEL_S3_SECRET_KEY in .env}
+      MINIO_ROOT_USER: *s3_access_key
+      MINIO_ROOT_PASSWORD: *s3_secret_key
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
     volumes:
       - minio-data:/data
-    # No published port. Browsers reach MinIO through the proxy on the public origin (see the caddyfile config below),
+    # No published port. Browsers reach MinIO through the proxy on the public URL,
     # and the other services reach it over the compose network.
     expose:
       - "9000"
 
   minio-init:
-    # Creates the bucket on first start and exits. Safe to run again. The client image has no shell,
-    # so it connects through the MC_HOST_local variable and on-failure restarts cover the wait for MinIO.
-    image: ${ARTEL_MINIO_CLIENT_IMAGE:-cgr.dev/chainguard/minio-client:latest}
-    depends_on:
-      - minio
-    environment:
-      MC_HOST_local: http://${ARTEL_S3_ACCESS_KEY}:${ARTEL_S3_SECRET_KEY}@minio:9000
-    command: ["mb", "--ignore-existing", "local/${ARTEL_S3_BUCKET:-artel}"]
-    restart: on-failure
+    # MinIO serves every top-level directory of its data volume as a bucket, so this creates the
+    # bucket "artel" on first start and exits. The bucket name must not be api, oauth2, login, ws,
+    # assets, projects or account: the proxy routes those paths to the console and the API.
+    # 65532 is the user the MinIO image runs as.
+    image: busybox:1.37
+    command: ["sh", "-c", "mkdir -p /data/artel && chown 65532:65532 /data/artel"]
+    volumes:
+      - minio-data:/data
 
   orchestration:
     <<: *restart
-    image: ${ARTEL_ORCHESTRATION_IMAGE:-ghcr.io/project-artel/orchestration:develop}
+    image: ghcr.io/project-artel/orchestration:develop
     build:
       context: ../artel-orchestration-server
       dockerfile: ../deploy/Dockerfile.orchestration
@@ -81,14 +99,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
+      minio:
+        condition: service_started
     environment:
       DB_HOST: postgres
       DB_PORT: "5432"
-      DB_NAME: ${DB_NAME:-artel}
-      DB_USERNAME: ${DB_USERNAME:-artel}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: artel
+      DB_USERNAME: artel
+      DB_PASSWORD: *db_password
       DB_SSL_MODE: disable
       REDIS_URL: redis://redis:6379
       ARTEL_INTERNAL_API_PORT: "8081"
@@ -100,69 +118,71 @@ services:
       # request including each 401, 403 and 404. Keep production logs at INFO.
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_REACTIVE: INFO
-      ARTEL_HOME_URL: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
-      ARTEL_ALLOWED_ORIGINS: ${ARTEL_PUBLIC_URL:-http://localhost:8088},${ARTEL_ADMIN_URL:-http://localhost:8090}
-      ARTEL_JWT_SECRET: ${ARTEL_JWT_SECRET:?set ARTEL_JWT_SECRET in .env}
-      ARTEL_SECRETS_KEY: ${ARTEL_SECRETS_KEY:?set ARTEL_SECRETS_KEY in .env}
-      ARTEL_SECURE_COOKIE: ${ARTEL_SECURE_COOKIE:-false}
-      ARTEL_SIGNUP_OPEN: ${ARTEL_SIGNUP_OPEN:-false}
-      ARTEL_GITHUB_SIGNUP_OPEN: ${ARTEL_GITHUB_SIGNUP_OPEN:-false}
-      ARTEL_LOGIN_MAX_FAILURES: ${ARTEL_LOGIN_MAX_FAILURES:-10}
-      ARTEL_LOGIN_FAILURE_WINDOW: ${ARTEL_LOGIN_FAILURE_WINDOW:-PT15M}
-      ARTEL_LOGIN_ADDRESS_MAX_FAILURES: ${ARTEL_LOGIN_ADDRESS_MAX_FAILURES:-100}
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      ARTEL_S3_BUCKET: ${ARTEL_S3_BUCKET:-artel}
-      ARTEL_S3_REGION: ${ARTEL_S3_REGION:-us-east-1}
+      # The console origin is always allowed; this adds the admin page.
+      ARTEL_HOME_URL: *public_url
+      ARTEL_ALLOWED_ORIGINS: *admin_url
+      ARTEL_JWT_SECRET: *jwt_secret
+      ARTEL_SECRETS_KEY: *secrets_key
+      # Set to true only when the public URL is https, so cookies are sent over TLS only.
+      ARTEL_SECURE_COOKIE: "false"
+      # The first account to sign up becomes the admin. After that, public signup is closed unless true.
+      ARTEL_SIGNUP_OPEN: "false"
+      # With false, a GitHub account signs in only when an admin created a user with the same email.
+      ARTEL_GITHUB_SIGNUP_OPEN: "false"
+      # Login rate limit: failures per email or per client address inside the window before a 429.
+      ARTEL_LOGIN_MAX_FAILURES: "10"
+      ARTEL_LOGIN_FAILURE_WINDOW: PT15M
+      ARTEL_LOGIN_ADDRESS_MAX_FAILURES: "100"
+      OPENROUTER_API_KEY: *openrouter_api_key
+      # Optional GitHub login. The button is hidden unless both are set.
+      # Callback URL: <public URL>/login/oauth2/code/github
+      GITHUB_CLIENT_ID: ""
+      GITHUB_CLIENT_SECRET: ""
+      ARTEL_S3_BUCKET: artel
+      ARTEL_S3_REGION: us-east-1
       # The server's own S3 calls go to MinIO over the compose network. Presigned URLs that the browser
-      # opens are written for the public origin, and the proxy forwards /<bucket>/ to MinIO unchanged.
-      # Credentials are always set here, so URLs are SigV4 presigned (never the anonymous objectUrl form).
+      # opens are written for the public URL, and the proxy forwards /artel/ to MinIO unchanged.
       ARTEL_S3_ENDPOINT: http://minio:9000
-      ARTEL_S3_PRESIGN_ENDPOINT: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
-      ARTEL_S3_ACCESS_KEY: ${ARTEL_S3_ACCESS_KEY}
-      ARTEL_S3_SECRET_KEY: ${ARTEL_S3_SECRET_KEY}
+      ARTEL_S3_PRESIGN_ENDPOINT: *public_url
+      ARTEL_S3_ACCESS_KEY: *s3_access_key
+      ARTEL_S3_SECRET_KEY: *s3_secret_key
     # 8080 is reached only through the reverse proxy and 8081 only from this network.
-    # Neither is published to the host.
     expose:
       - "8080"
       - "8081"
 
   agent-server:
     <<: *restart
-    image: ${ARTEL_AGENT_IMAGE:-ghcr.io/project-artel/agent:develop}
+    image: ghcr.io/project-artel/agent:develop
     build:
       context: ../artel-agent-server
       target: runtime
     environment:
       APP_PORT: "8000"
       APP_ENV: production
-      # The key comes from orchestration's admin setting first; this variable is the fallback.
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      # Internal port: the unauthenticated /internal/** API. Reached only over the compose network.
+      # The key from the admin page wins; this is the fallback.
+      OPENROUTER_API_KEY: *openrouter_api_key
+      # Internal port: the unauthenticated /internal/** API, reached only over the compose network.
       ORCHESTRATION_BASE_URL: http://orchestration:8081
       LANGSMITH_TRACING: "false"
-      # Optional. Nothing in a default install calls Bedrock.
-      BEDROCK_API_KEY: ${BEDROCK_API_KEY:-}
     expose:
       - "8000"
 
   admin-page:
     <<: *restart
-    image: ${ARTEL_ADMIN_IMAGE:-ghcr.io/project-artel/admin:main}
+    image: ghcr.io/project-artel/admin:main
     environment:
-      # The container replaces a placeholder in the bundle with these at start and exits if one is missing.
-      # The admin browser calls its own origin; the proxy forwards /api, /oauth2, /login/oauth2 and /ws.
-      VITE_ORCHESTRATION_URL: ${ARTEL_ADMIN_URL:-http://localhost:8090}
-      VITE_HOME_URL: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
+      # The container replaces a placeholder in the bundle with these at start.
+      VITE_ORCHESTRATION_URL: *admin_url
+      VITE_HOME_URL: *public_url
     expose:
       - "8080"
 
   artel-home:
     <<: *restart
-    image: ${ARTEL_CONSOLE_IMAGE:-ghcr.io/project-artel/console:develop}
+    image: ghcr.io/project-artel/console:develop
     environment:
-      VITE_ORCHESTRATION_URL: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
+      VITE_ORCHESTRATION_URL: *public_url
     expose:
       - "8080"
 
@@ -179,23 +199,25 @@ services:
     volumes:
       - caddy-data:/data
       - caddy-config:/config
+    # Host ports: console, TLS (used only when a Caddy site address is a host name), admin page.
     ports:
-      - "${ARTEL_HTTP_PORT:-8088}:80"
-      - "${ARTEL_HTTPS_PORT:-8443}:443"
-      - "${ARTEL_ADMIN_PORT:-8090}:8090"
+      - "8088:80"
+      - "8443:443"
+      - "8090:8090"
 
-# Caddy configuration. Compose fills in the ${...} values from .env. Two origins, because each frontend
-# image serves its bundle from the root path, and each browser talks only to its own origin (no CORS).
+# Caddy configuration. It cannot read the values at the top, so edit the ports above and the public URL together.
+# A host name instead of :80 or :8090 makes Caddy fetch a TLS certificate. The two sites are two origins
+# because each frontend image serves its bundle from the root path; each browser calls only its own origin.
 # The orchestration internal port 8081 is deliberately not routed.
 configs:
   caddyfile:
     content: |
-      ${ARTEL_SITE_ADDRESS:-:80} {
+      :80 {
         encode zstd gzip
 
         # Presigned upload and download URLs go straight to MinIO. They are signed over the exact path
         # and Host header, so this route must not rewrite either.
-        handle /${ARTEL_S3_BUCKET:-artel}/* {
+        handle /artel/* {
           reverse_proxy minio:9000
         }
 
@@ -212,7 +234,7 @@ configs:
         }
       }
 
-      ${ARTEL_ADMIN_SITE_ADDRESS:-:8090} {
+      :8090 {
         encode zstd gzip
 
         @orchestration path /api/* /oauth2/* /login/oauth2/* /ws/*
@@ -226,6 +248,7 @@ configs:
           reverse_proxy admin-page:8080
         }
       }
+
 
 volumes:
   postgres-data:
