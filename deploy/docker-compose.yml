@@ -89,7 +89,14 @@ services:
       DB_SSL_MODE: disable
       REDIS_URL: redis://redis:6379
       ARTEL_INTERNAL_API_PORT: "8081"
-      ARTEL_AGENT_BASE_URL: http://agent-server:8000
+      # The agent server serves every route under /internal, and the clients append /extract, /embed,
+      # /sessions and so on to this base URL, so the prefix belongs here.
+      ARTEL_AGENT_BASE_URL: http://agent-server:8000/internal
+      ARTEL_AGENT_WS_BASE_URL: ws://agent-server:8000/internal
+      # The server's application.yml sets org.springframework.web to DEBUG, which logs a line for every
+      # request including each 401, 403 and 404. Keep production logs at INFO.
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_REACTIVE: INFO
       ARTEL_HOME_URL: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
       ARTEL_ALLOWED_ORIGINS: ${ARTEL_PUBLIC_URL:-http://localhost:8088},${ARTEL_ADMIN_URL:-http://localhost:8090}
       ARTEL_JWT_SECRET: ${ARTEL_JWT_SECRET:?set ARTEL_JWT_SECRET in .env}

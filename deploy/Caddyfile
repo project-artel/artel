@@ -23,11 +23,10 @@
 	@orchestration path /api/* /oauth2/* /login/oauth2/* /ws/*
 	handle @orchestration {
 		# flush_interval -1 keeps server-sent event streams from being buffered.
+		# No header_up for X-Forwarded-For: Caddy already replaces a client-written value for untrusted
+		# clients, and the server rate-limits logins per leftmost address.
 		reverse_proxy orchestration:8080 {
 			flush_interval -1
-			# Overwrite, never append: the server rate-limits logins per leftmost X-Forwarded-For
-			# address, so a client-written header must not survive.
-			header_up X-Forwarded-For {remote_host}
 		}
 	}
 
@@ -43,7 +42,6 @@
 	handle @orchestration {
 		reverse_proxy orchestration:8080 {
 			flush_interval -1
-			header_up X-Forwarded-For {remote_host}
 		}
 	}
 

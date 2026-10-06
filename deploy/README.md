@@ -79,6 +79,9 @@ All settings live in `.env`; comments in `.env.example` explain each one. Highli
 - `ARTEL_ADMIN_URL` (default `http://localhost:8090`), `ARTEL_ADMIN_PORT` (default `8090`), `ARTEL_ADMIN_SITE_ADDRESS` (default `:8090`):
   the admin page's address, its published port and its Caddy site address. A host name in `ARTEL_ADMIN_SITE_ADDRESS` makes Caddy fetch a certificate for it.
   Keep the admin host name under the same host name as the console, or sign in on each separately.
+- The orchestration service sets `ARTEL_AGENT_BASE_URL` and `ARTEL_AGENT_WS_BASE_URL` to `http://agent-server:8000/internal` and `ws://agent-server:8000/internal`,
+  because the agent server serves every route under `/internal`. It also sets `LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB` and `LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_REACTIVE` to `INFO`;
+  the server's own default is `DEBUG`, which logs a line for every request. Change these in `docker-compose.yml` if you need the request lines.
 - `ARTEL_ORCHESTRATION_IMAGE`, `ARTEL_AGENT_IMAGE`, `ARTEL_CONSOLE_IMAGE`, `ARTEL_ADMIN_IMAGE`: image references. The defaults are the four images listed at the top.
 
 - `ARTEL_GITHUB_SIGNUP_OPEN`: lets a GitHub account that has no ARTEL user sign up. Default `false`; with `false`, a GitHub account signs in only when an admin already created a user with the same email.
@@ -175,7 +178,9 @@ docker run --rm --network artel \
 docker run -d --name orchestration --network artel --restart unless-stopped \
   -e DB_HOST=postgres -e DB_PORT=5432 -e DB_NAME=artel -e DB_USERNAME=artel -e DB_PASSWORD="$DB_PASSWORD" \
   -e DB_SSL_MODE=disable -e REDIS_URL=redis://redis:6379 \
-  -e ARTEL_INTERNAL_API_PORT=8081 -e ARTEL_AGENT_BASE_URL=http://agent-server:8000 \
+  -e ARTEL_INTERNAL_API_PORT=8081 \
+  -e ARTEL_AGENT_BASE_URL=http://agent-server:8000/internal -e ARTEL_AGENT_WS_BASE_URL=ws://agent-server:8000/internal \
+  -e LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=INFO -e LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_REACTIVE=INFO \
   -e ARTEL_HOME_URL=http://localhost:8088 -e ARTEL_ALLOWED_ORIGINS=http://localhost:8088,http://localhost:8090 \
   -e ARTEL_JWT_SECRET="$ARTEL_JWT_SECRET" -e ARTEL_SECRETS_KEY="$ARTEL_SECRETS_KEY" \
   -e ARTEL_SECURE_COOKIE=false -e ARTEL_SIGNUP_OPEN=false -e ARTEL_GITHUB_SIGNUP_OPEN=false \
