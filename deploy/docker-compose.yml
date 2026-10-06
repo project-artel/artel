@@ -1,0 +1,189 @@
+# ARTEL self-hosted stack. Run from this directory:
+#   cp .env.example .env   (or let install.sh generate it)   then   docker compose up -d
+#
+# Every image has a published name (ghcr.io/project-artel/<name>:${ARTEL_IMAGE_TAG}) and a build
+# section, so `docker compose pull` and `docker compose build` both work.
+
+name: artel
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  postgres:
+    <<: *restart
+    # Must be the pgvector image: a Flyway migration runs CREATE EXTENSION vector.
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${DB_NAME:-artel}
+      POSTGRES_USER: ${DB_USERNAME:-artel}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    <<: *restart
+    # Holds only five-minute SDK login codes, so persistence stays off on purpose.
+    # Valkey, not Redis: current Redis 7.x tags are RSALv2/SSPLv1, which does not fit an AGPL-3.0 release.
+    # It speaks the same protocol, so the service name and REDIS_URL stay as they were.
+    image: valkey/valkey:8.1.10-alpine
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    <<: *restart
+    # Docker Hub no longer serves minio/minio, so the default is the Chainguard build. Override with
+    # ARTEL_MINIO_IMAGE if you mirror another build.
+    image: ${ARTEL_MINIO_IMAGE:-cgr.dev/chainguard/minio:latest}
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${ARTEL_S3_ACCESS_KEY:?set ARTEL_S3_ACCESS_KEY in .env}
+      MINIO_ROOT_PASSWORD: ${ARTEL_S3_SECRET_KEY:?set ARTEL_S3_SECRET_KEY in .env}
+    volumes:
+      - minio-data:/data
+    # No published port. Browsers reach MinIO through the proxy on the public origin (see Caddyfile),
+    # and the other services reach it over the compose network.
+    expose:
+      - "9000"
+
+  minio-init:
+    # Creates the bucket on first start and exits. Safe to run again. The client image has no shell,
+    # so it connects through the MC_HOST_local variable and on-failure restarts cover the wait for MinIO.
+    image: ${ARTEL_MINIO_CLIENT_IMAGE:-cgr.dev/chainguard/minio-client:latest}
+    depends_on:
+      - minio
+    environment:
+      MC_HOST_local: http://${ARTEL_S3_ACCESS_KEY}:${ARTEL_S3_SECRET_KEY}@minio:9000
+    command: ["mb", "--ignore-existing", "local/${ARTEL_S3_BUCKET:-artel}"]
+    restart: on-failure
+
+  orchestration:
+    <<: *restart
+    image: ghcr.io/project-artel/artel-orchestration-server:${ARTEL_IMAGE_TAG:-latest}
+    build:
+      context: ../artel-orchestration-server
+      dockerfile: ../deploy/Dockerfile.orchestration
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-artel}
+      DB_USERNAME: ${DB_USERNAME:-artel}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSL_MODE: disable
+      REDIS_URL: redis://redis:6379
+      ARTEL_INTERNAL_API_PORT: "8081"
+      ARTEL_AGENT_BASE_URL: http://agent-server:8000
+      ARTEL_HOME_URL: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
+      ARTEL_ALLOWED_ORIGINS: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
+      ARTEL_JWT_SECRET: ${ARTEL_JWT_SECRET:?set ARTEL_JWT_SECRET in .env}
+      ARTEL_SECRETS_KEY: ${ARTEL_SECRETS_KEY:?set ARTEL_SECRETS_KEY in .env}
+      ARTEL_SECURE_COOKIE: ${ARTEL_SECURE_COOKIE:-false}
+      ARTEL_SIGNUP_OPEN: ${ARTEL_SIGNUP_OPEN:-false}
+      ARTEL_GITHUB_SIGNUP_OPEN: ${ARTEL_GITHUB_SIGNUP_OPEN:-false}
+      ARTEL_LOGIN_MAX_FAILURES: ${ARTEL_LOGIN_MAX_FAILURES:-10}
+      ARTEL_LOGIN_FAILURE_WINDOW: ${ARTEL_LOGIN_FAILURE_WINDOW:-PT15M}
+      ARTEL_LOGIN_ADDRESS_MAX_FAILURES: ${ARTEL_LOGIN_ADDRESS_MAX_FAILURES:-100}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      ARTEL_S3_BUCKET: ${ARTEL_S3_BUCKET:-artel}
+      ARTEL_S3_REGION: ${ARTEL_S3_REGION:-us-east-1}
+      # The server's own S3 calls go to MinIO over the compose network. Presigned URLs that the browser
+      # opens are written for the public origin, and the proxy forwards /<bucket>/ to MinIO unchanged.
+      # Credentials are always set here, so URLs are SigV4 presigned (never the anonymous objectUrl form).
+      ARTEL_S3_ENDPOINT: http://minio:9000
+      ARTEL_S3_PRESIGN_ENDPOINT: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
+      ARTEL_S3_ACCESS_KEY: ${ARTEL_S3_ACCESS_KEY}
+      ARTEL_S3_SECRET_KEY: ${ARTEL_S3_SECRET_KEY}
+    # 8080 is reached only through the reverse proxy and 8081 only from this network.
+    # Neither is published to the host.
+    expose:
+      - "8080"
+      - "8081"
+
+  agent-server:
+    <<: *restart
+    image: ghcr.io/project-artel/artel-agent-server:${ARTEL_IMAGE_TAG:-latest}
+    build:
+      context: ../artel-agent-server
+      target: runtime
+      args:
+        IMAGE_TAG: ${ARTEL_IMAGE_TAG:-latest}
+    environment:
+      APP_PORT: "8000"
+      APP_ENV: production
+      # The key comes from orchestration's admin setting first; this variable is the fallback.
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # Internal port: the unauthenticated /internal/** API. Reached only over the compose network.
+      ORCHESTRATION_BASE_URL: http://orchestration:8081
+      LANGSMITH_TRACING: "false"
+      # Optional. Nothing in a default install calls Bedrock.
+      BEDROCK_API_KEY: ${BEDROCK_API_KEY:-}
+    expose:
+      - "8000"
+
+  admin-page:
+    <<: *restart
+    image: ghcr.io/project-artel/admin-page:${ARTEL_IMAGE_TAG:-latest}
+    build:
+      context: ../admin-page
+      dockerfile: ../deploy/Dockerfile.frontend
+      args:
+        SITE_BASE: /admin/
+        VITE_ORCHESTRATION_URL: ""
+        VITE_HOME_URL: /.
+    expose:
+      - "80"
+
+  artel-home:
+    <<: *restart
+    image: ghcr.io/project-artel/artel-home:${ARTEL_IMAGE_TAG:-latest}
+    build:
+      context: ../artel-home
+      dockerfile: ../deploy/Dockerfile.frontend
+      args:
+        SITE_BASE: /
+        VITE_ORCHESTRATION_URL: ""
+    expose:
+      - "80"
+
+  proxy:
+    <<: *restart
+    image: caddy:2-alpine
+    depends_on:
+      - orchestration
+      - admin-page
+      - artel-home
+    environment:
+      ARTEL_SITE_ADDRESS: ${ARTEL_SITE_ADDRESS:-:80}
+      # Paths under /<bucket>/ go to MinIO. install.sh refuses a bucket name that collides with a route.
+      ARTEL_S3_BUCKET: ${ARTEL_S3_BUCKET:-artel}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports:
+      - "${ARTEL_HTTP_PORT:-8088}:80"
+      - "${ARTEL_HTTPS_PORT:-8443}:443"
+
+volumes:
+  postgres-data:
+  minio-data:
+  caddy-data:
+  caddy-config:

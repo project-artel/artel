@@ -1,0 +1,7 @@
+target
+.git
+.plan
+.agents
+.env
+.env.*
+!.env.example

@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1
+# Builds artel-home or admin-page as a static site served by nginx.
+# Build context: ../artel-home or ../admin-page.
+#
+# Both frontends read VITE_ORCHESTRATION_URL at build time. An empty value makes every request
+# relative to the page origin, so one image works behind any hostname and nothing is rebuilt
+# per host. The reverse proxy sends /api, /oauth2, /login/oauth2 and /ws to the orchestration server.
+FROM node:22-alpine AS build
+WORKDIR /src
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+
+# URL prefix the site is served under: "/" for artel-home, "/admin/" for admin-page.
+ARG SITE_BASE=/
+# Empty keeps requests relative to the page origin. Do not set a host here.
+ARG VITE_ORCHESTRATION_URL=
+# Where the "back to home" link goes. admin-page strips one trailing slash from this value and
+# an empty result would turn the link into a reload of the current page, so "/." (which the
+# browser resolves to "/") is used instead of "/".
+ARG VITE_HOME_URL=/.
+ENV VITE_ORCHESTRATION_URL=${VITE_ORCHESTRATION_URL} \
+    VITE_HOME_URL=${VITE_HOME_URL}
+RUN npx tsc -b && npx vite build --base="${SITE_BASE}"
+
+FROM nginx:1.27-alpine
+ARG SITE_BASE=/
+# The nginx image substitutes ${SITE_BASE} into this template at start; $uri is left alone.
+COPY <<'NGINX' /etc/nginx/templates/default.conf.template
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+
+    # Hashed build assets never change under the same name.
+    location ${SITE_BASE}assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # Single-page application: unknown paths load the entry page and the client router takes over.
+    location / {
+        add_header Cache-Control "no-cache";
+        try_files $uri ${SITE_BASE}index.html;
+    }
+}
+NGINX
+ENV SITE_BASE=${SITE_BASE}
+# Files live under the same prefix the page is served from, so the proxy forwards paths unchanged.
+COPY --from=build /src/dist /usr/share/nginx/html${SITE_BASE}
+EXPOSE 80

@@ -1,0 +1,37 @@
+# One origin for everything, so the session cookies are first-party and no CORS setup is needed.
+#
+#   /api, /oauth2, /login/oauth2, /ws   orchestration server, public port 8080
+#   /admin/                              admin-page (built with base /admin/)
+#   /<bucket>/*                          MinIO, presigned upload and download URLs (path style)
+#   everything else                      artel-home
+#
+# The orchestration internal port 8081 is deliberately not routed here.
+{$ARTEL_SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# Presigned URLs are signed over the exact path and Host header, so this route must not rewrite
+	# either. reverse_proxy keeps both as received.
+	handle /{$ARTEL_S3_BUCKET:artel}/* {
+		reverse_proxy minio:9000
+	}
+
+	@orchestration path /api/* /oauth2/* /login/oauth2/* /ws/*
+	handle @orchestration {
+		# flush_interval -1 keeps server-sent event streams from being buffered.
+		reverse_proxy orchestration:8080 {
+			flush_interval -1
+			# Overwrite, never append: the server rate-limits logins per leftmost X-Forwarded-For
+			# address, so a client-written header must not survive.
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	handle /admin/* {
+		reverse_proxy admin-page:80
+	}
+	redir /admin /admin/ permanent
+
+	handle {
+		reverse_proxy artel-home:80
+	}
+}
