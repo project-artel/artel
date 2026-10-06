@@ -1,0 +1,19 @@
+# Builds artel-orchestration-server from source. Build context: ../artel-orchestration-server
+# (the submodule's own Dockerfile expects a prebuilt jar, which a fresh clone does not have).
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /src
+COPY .mvn ./.mvn
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline
+COPY src ./src
+RUN ./mvnw -B -q -DskipTests package \
+    && cp target/artel-orchestration-server-*.jar /app.jar
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app.jar app.jar
+
+# 8080 is the public API. 8081 serves /internal/** without authentication and must never be
+# published to the host or routed by the reverse proxy. EXPOSE is documentation only.
+EXPOSE 8080 8081
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
