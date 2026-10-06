@@ -27,9 +27,10 @@ curl -fsSL https://raw.githubusercontent.com/project-artel/artel/main/deploy/ins
 | `--port HTTP_PORT` | `8088` | host port of the web address (the admin page keeps `ARTEL_ADMIN_PORT`, default `8090`) |
 | `--no-start` | off | write files only |
 
-The script checks `docker` and `docker compose`, downloads `docker-compose.yml`, `Caddyfile` and
+The script checks `docker` and `docker compose`, downloads `docker-compose.yml` and
 `.env.example`, writes `.env` with random secrets from `openssl rand` (an existing `.env` is never overwritten),
-and runs `docker compose up -d`. Running it again is safe and acts as an upgrade of the compose files.
+and runs `docker compose up -d`. Running it again is safe and acts as an upgrade of the compose file.
+It stops with an error if Docker Compose is older than 2.23.1.
 
 When it finishes, open `http://localhost:8088`. **The first account to sign up becomes the admin.**
 The admin page is at `http://localhost:8090` (`ARTEL_ADMIN_URL`), where the OpenRouter key can be set.
@@ -53,11 +54,13 @@ the container exits if one is missing. When you change either URL, run `docker c
 
 ## Docker Compose
 
+Docker Compose 2.23.1 or later is required: the Caddy configuration is written inside `docker-compose.yml` (the `configs:` element with `content:`), so the install needs no other file.
+Copy `docker-compose.yml` and `.env.example` into one directory (or run `install.sh`, which does this and generates the secrets), then:
+
 ```sh
-cd deploy
 cp .env.example .env        # then replace every __GENERATE_...__ value, for example with: openssl rand -hex 32
 docker compose up -d        # pulls the ghcr.io/project-artel/* images
-docker compose build orchestration agent-server   # optional: build these two from this clone (needs the submodules checked out)
+docker compose build orchestration agent-server   # optional, in a clone of this repository only (needs the submodules checked out)
 docker compose ps
 docker compose logs -f orchestration   # or any service: agent-server, proxy, postgres, minio ...
 docker compose down         # stop, keep data
@@ -140,82 +143,6 @@ docker compose start postgres
 ```
 
 Also back up the `artel_minio-data` volume (uploaded documents and screen captures) the same way, and keep `.env`.
-
-## Plain `docker run`
-
-The same stack without compose. Values below match a default `.env`; replace the secrets with your own.
-Container names double as host names on the `artel` network, which is why the Caddyfile finds them.
-
-```sh
-export DB_PASSWORD=$(openssl rand -hex 16)
-export ARTEL_JWT_SECRET=$(openssl rand -hex 32)
-export ARTEL_SECRETS_KEY=$(openssl rand -hex 32)
-export S3_ACCESS_KEY=$(openssl rand -hex 8)
-export S3_SECRET_KEY=$(openssl rand -hex 24)
-
-docker network create artel
-docker volume create artel_postgres-data
-docker volume create artel_minio-data
-
-docker run -d --name postgres --network artel --restart unless-stopped \
-  -e POSTGRES_DB=artel -e POSTGRES_USER=artel -e POSTGRES_PASSWORD="$DB_PASSWORD" \
-  -v artel_postgres-data:/var/lib/postgresql/data \
-  pgvector/pgvector:pg16
-
-docker run -d --name redis --network artel --restart unless-stopped \
-  valkey/valkey:8.1.10-alpine valkey-server --save "" --appendonly no
-
-docker run -d --name minio --network artel --restart unless-stopped \
-  -e MINIO_ROOT_USER="$S3_ACCESS_KEY" -e MINIO_ROOT_PASSWORD="$S3_SECRET_KEY" \
-  -v artel_minio-data:/data \
-  cgr.dev/chainguard/minio:latest server /data --console-address :9001
-
-# One-shot: create the bucket. If MinIO is not ready yet, run it again after a few seconds.
-docker run --rm --network artel \
-  -e MC_HOST_local="http://$S3_ACCESS_KEY:$S3_SECRET_KEY@minio:9000" \
-  cgr.dev/chainguard/minio-client:latest mb --ignore-existing local/artel
-
-docker run -d --name orchestration --network artel --restart unless-stopped \
-  -e DB_HOST=postgres -e DB_PORT=5432 -e DB_NAME=artel -e DB_USERNAME=artel -e DB_PASSWORD="$DB_PASSWORD" \
-  -e DB_SSL_MODE=disable -e REDIS_URL=redis://redis:6379 \
-  -e ARTEL_INTERNAL_API_PORT=8081 \
-  -e ARTEL_AGENT_BASE_URL=http://agent-server:8000/internal -e ARTEL_AGENT_WS_BASE_URL=ws://agent-server:8000/internal \
-  -e LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=INFO -e LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_REACTIVE=INFO \
-  -e ARTEL_HOME_URL=http://localhost:8088 -e ARTEL_ALLOWED_ORIGINS=http://localhost:8088,http://localhost:8090 \
-  -e ARTEL_JWT_SECRET="$ARTEL_JWT_SECRET" -e ARTEL_SECRETS_KEY="$ARTEL_SECRETS_KEY" \
-  -e ARTEL_SECURE_COOKIE=false -e ARTEL_SIGNUP_OPEN=false -e ARTEL_GITHUB_SIGNUP_OPEN=false \
-  -e OPENROUTER_API_KEY= -e GITHUB_CLIENT_ID= -e GITHUB_CLIENT_SECRET= \
-  -e ARTEL_S3_BUCKET=artel -e ARTEL_S3_REGION=us-east-1 -e ARTEL_S3_ENDPOINT=http://minio:9000 -e ARTEL_S3_PRESIGN_ENDPOINT=http://localhost:8088 \
-  -e ARTEL_S3_ACCESS_KEY="$S3_ACCESS_KEY" -e ARTEL_S3_SECRET_KEY="$S3_SECRET_KEY" \
-  ghcr.io/project-artel/orchestration:develop
-# No -p here: port 8081 serves /internal/** without authentication and must stay on the network.
-
-docker run -d --name agent-server --network artel --restart unless-stopped \
-  -e APP_PORT=8000 -e APP_ENV=production -e OPENROUTER_API_KEY= \
-  -e ORCHESTRATION_BASE_URL=http://orchestration:8081 -e LANGSMITH_TRACING=false \
-  ghcr.io/project-artel/agent:develop
-
-# The frontend images listen on 8080 and need these variables at start (they exit without them).
-docker run -d --name admin-page --network artel --restart unless-stopped \
-  -e VITE_ORCHESTRATION_URL=http://localhost:8090 -e VITE_HOME_URL=http://localhost:8088 \
-  ghcr.io/project-artel/admin:main
-
-docker run -d --name artel-home --network artel --restart unless-stopped \
-  -e VITE_ORCHESTRATION_URL=http://localhost:8088 \
-  ghcr.io/project-artel/console:develop
-
-# Run from the deploy directory so ./Caddyfile exists.
-docker run -d --name proxy --network artel --restart unless-stopped \
-  -e ARTEL_SITE_ADDRESS=:80 -e ARTEL_ADMIN_SITE_ADDRESS=:8090 -e ARTEL_S3_BUCKET=artel \
-  -p 8088:80 -p 8443:443 -p 8090:8090 \
-  -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" -v artel_caddy-data:/data -v artel_caddy-config:/config \
-  caddy:2-alpine
-```
-
-The Caddyfile has two sites, the console on `ARTEL_SITE_ADDRESS` and the admin page on `ARTEL_ADMIN_SITE_ADDRESS`.
-Open `http://localhost:8088`; the first sign-up becomes the admin, and `http://localhost:8090` is the admin page. To stop everything:
-`docker rm -f proxy artel-home admin-page agent-server orchestration minio redis postgres`
-(volumes and the network stay until you remove them).
 
 ## Building the images from a clone
 

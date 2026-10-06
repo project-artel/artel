@@ -3,7 +3,7 @@
 # Pass flags through a pipe with:                  curl -fsSL <url>/install.sh | sh -s -- --dir /opt/artel
 #
 # Idempotent: an existing .env is never overwritten, and running it again updates the compose
-# files and re-runs `docker compose up -d`.
+# file and re-runs `docker compose up -d`.
 set -eu
 
 install_dir="${ARTEL_INSTALL_DIR:-$HOME/artel}"
@@ -44,6 +44,16 @@ esac
 command -v docker >/dev/null 2>&1 || fail "docker is not installed. See https://docs.docker.com/engine/install/"
 docker info >/dev/null 2>&1 || fail "the docker daemon is not reachable. Start it, or check that your user may run docker."
 docker compose version >/dev/null 2>&1 || fail "docker compose v2 is not available. See https://docs.docker.com/compose/install/"
+# docker-compose.yml inlines the Caddy configuration with `configs: content:`, which needs Compose 2.23.1 or later.
+compose_version=$(docker compose version --short | sed 's/^v//')
+compose_major=${compose_version%%.*}
+compose_rest=${compose_version#*.}
+compose_minor=${compose_rest%%.*}
+compose_patch=${compose_rest#*.}
+compose_patch=${compose_patch%%[!0-9]*}
+if [ "$compose_major" -lt 2 ] || { [ "$compose_major" -eq 2 ] && { [ "$compose_minor" -lt 23 ] || { [ "$compose_minor" -eq 23 ] && [ "${compose_patch:-0}" -lt 1 ]; }; }; }; then
+  fail "Docker Compose $compose_version is too old. ARTEL needs 2.23.1 or later. See https://docs.docker.com/compose/install/"
+fi
 command -v openssl >/dev/null 2>&1 || fail "openssl is required to generate secrets"
 
 if command -v curl >/dev/null 2>&1; then
@@ -69,7 +79,6 @@ fetch_file() {
 }
 
 fetch_file docker-compose.yml
-fetch_file Caddyfile
 # The template is fetched on every run so a new variable shows up in .env.example after an upgrade.
 fetch_file .env.example
 

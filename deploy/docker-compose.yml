@@ -1,9 +1,12 @@
-# ARTEL self-hosted stack. Run from this directory:
-#   cp .env.example .env   (or let install.sh generate it)   then   docker compose up -d
+# ARTEL self-hosted stack. Needs Docker Compose 2.23.1 or later (the Caddy configuration below is inlined).
 #
-# The images are the ones the organization's CI publishes on every push to ghcr.io/project-artel
-# (orchestration, agent and console on develop, admin on main). orchestration and agent also have a
-# build section, so `docker compose build` works from a clone for those two. The frontends have none.
+#   1. Save this file and .env.example in one directory.
+#   2. cp .env.example .env   and edit it. Replace every __GENERATE_...__ value (openssl rand -hex 32).
+#   3. docker compose up -d   and open ARTEL_PUBLIC_URL (default http://localhost:8088).
+#
+# The first account to sign up becomes the admin; the admin page (default http://localhost:8090) sets the OpenRouter key.
+# Only the __GENERATE_...__ secrets in .env must change; everything else has a working default.
+# The build sections only matter in a clone of the repository: `docker compose build orchestration agent-server`.
 
 name: artel
 
@@ -51,7 +54,7 @@ services:
       MINIO_ROOT_PASSWORD: ${ARTEL_S3_SECRET_KEY:?set ARTEL_S3_SECRET_KEY in .env}
     volumes:
       - minio-data:/data
-    # No published port. Browsers reach MinIO through the proxy on the public origin (see Caddyfile),
+    # No published port. Browsers reach MinIO through the proxy on the public origin (see the caddyfile config below),
     # and the other services reach it over the compose network.
     expose:
       - "9000"
@@ -170,19 +173,59 @@ services:
       - orchestration
       - admin-page
       - artel-home
-    environment:
-      ARTEL_SITE_ADDRESS: ${ARTEL_SITE_ADDRESS:-:80}
-      ARTEL_ADMIN_SITE_ADDRESS: ${ARTEL_ADMIN_SITE_ADDRESS:-:8090}
-      # Paths under /<bucket>/ go to MinIO. install.sh refuses a bucket name that collides with a route.
-      ARTEL_S3_BUCKET: ${ARTEL_S3_BUCKET:-artel}
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
     ports:
       - "${ARTEL_HTTP_PORT:-8088}:80"
       - "${ARTEL_HTTPS_PORT:-8443}:443"
       - "${ARTEL_ADMIN_PORT:-8090}:8090"
+
+# Caddy configuration. Compose fills in the ${...} values from .env. Two origins, because each frontend
+# image serves its bundle from the root path, and each browser talks only to its own origin (no CORS).
+# The orchestration internal port 8081 is deliberately not routed.
+configs:
+  caddyfile:
+    content: |
+      ${ARTEL_SITE_ADDRESS:-:80} {
+        encode zstd gzip
+
+        # Presigned upload and download URLs go straight to MinIO. They are signed over the exact path
+        # and Host header, so this route must not rewrite either.
+        handle /${ARTEL_S3_BUCKET:-artel}/* {
+          reverse_proxy minio:9000
+        }
+
+        @orchestration path /api/* /oauth2/* /login/oauth2/* /ws/*
+        handle @orchestration {
+          # flush_interval -1 keeps server-sent event streams from being buffered.
+          reverse_proxy orchestration:8080 {
+            flush_interval -1
+          }
+        }
+
+        handle {
+          reverse_proxy artel-home:8080
+        }
+      }
+
+      ${ARTEL_ADMIN_SITE_ADDRESS:-:8090} {
+        encode zstd gzip
+
+        @orchestration path /api/* /oauth2/* /login/oauth2/* /ws/*
+        handle @orchestration {
+          reverse_proxy orchestration:8080 {
+            flush_interval -1
+          }
+        }
+
+        handle {
+          reverse_proxy admin-page:8080
+        }
+      }
 
 volumes:
   postgres-data:
