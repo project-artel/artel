@@ -1,8 +1,9 @@
 # ARTEL self-hosted stack. Run from this directory:
 #   cp .env.example .env   (or let install.sh generate it)   then   docker compose up -d
 #
-# Every image has a published name (ghcr.io/project-artel/<name>:${ARTEL_IMAGE_TAG}) and a build
-# section, so `docker compose pull` and `docker compose build` both work.
+# The images are the ones the organization's CI publishes on every push to ghcr.io/project-artel
+# (orchestration, agent and console on develop, admin on main). orchestration and agent also have a
+# build section, so `docker compose build` works from a clone for those two. The frontends have none.
 
 name: artel
 
@@ -68,7 +69,7 @@ services:
 
   orchestration:
     <<: *restart
-    image: ghcr.io/project-artel/artel-orchestration-server:${ARTEL_IMAGE_TAG:-latest}
+    image: ${ARTEL_ORCHESTRATION_IMAGE:-ghcr.io/project-artel/orchestration:develop}
     build:
       context: ../artel-orchestration-server
       dockerfile: ../deploy/Dockerfile.orchestration
@@ -90,7 +91,7 @@ services:
       ARTEL_INTERNAL_API_PORT: "8081"
       ARTEL_AGENT_BASE_URL: http://agent-server:8000
       ARTEL_HOME_URL: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
-      ARTEL_ALLOWED_ORIGINS: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
+      ARTEL_ALLOWED_ORIGINS: ${ARTEL_PUBLIC_URL:-http://localhost:8088},${ARTEL_ADMIN_URL:-http://localhost:8090}
       ARTEL_JWT_SECRET: ${ARTEL_JWT_SECRET:?set ARTEL_JWT_SECRET in .env}
       ARTEL_SECRETS_KEY: ${ARTEL_SECRETS_KEY:?set ARTEL_SECRETS_KEY in .env}
       ARTEL_SECURE_COOKIE: ${ARTEL_SECURE_COOKIE:-false}
@@ -119,12 +120,10 @@ services:
 
   agent-server:
     <<: *restart
-    image: ghcr.io/project-artel/artel-agent-server:${ARTEL_IMAGE_TAG:-latest}
+    image: ${ARTEL_AGENT_IMAGE:-ghcr.io/project-artel/agent:develop}
     build:
       context: ../artel-agent-server
       target: runtime
-      args:
-        IMAGE_TAG: ${ARTEL_IMAGE_TAG:-latest}
     environment:
       APP_PORT: "8000"
       APP_ENV: production
@@ -140,28 +139,22 @@ services:
 
   admin-page:
     <<: *restart
-    image: ghcr.io/project-artel/admin-page:${ARTEL_IMAGE_TAG:-latest}
-    build:
-      context: ../admin-page
-      dockerfile: ../deploy/Dockerfile.frontend
-      args:
-        SITE_BASE: /admin/
-        VITE_ORCHESTRATION_URL: ""
-        VITE_HOME_URL: /.
+    image: ${ARTEL_ADMIN_IMAGE:-ghcr.io/project-artel/admin:main}
+    environment:
+      # The container replaces a placeholder in the bundle with these at start and exits if one is missing.
+      # The admin browser calls its own origin; the proxy forwards /api, /oauth2, /login/oauth2 and /ws.
+      VITE_ORCHESTRATION_URL: ${ARTEL_ADMIN_URL:-http://localhost:8090}
+      VITE_HOME_URL: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
     expose:
-      - "80"
+      - "8080"
 
   artel-home:
     <<: *restart
-    image: ghcr.io/project-artel/artel-home:${ARTEL_IMAGE_TAG:-latest}
-    build:
-      context: ../artel-home
-      dockerfile: ../deploy/Dockerfile.frontend
-      args:
-        SITE_BASE: /
-        VITE_ORCHESTRATION_URL: ""
+    image: ${ARTEL_CONSOLE_IMAGE:-ghcr.io/project-artel/console:develop}
+    environment:
+      VITE_ORCHESTRATION_URL: ${ARTEL_PUBLIC_URL:-http://localhost:8088}
     expose:
-      - "80"
+      - "8080"
 
   proxy:
     <<: *restart
@@ -172,6 +165,7 @@ services:
       - artel-home
     environment:
       ARTEL_SITE_ADDRESS: ${ARTEL_SITE_ADDRESS:-:80}
+      ARTEL_ADMIN_SITE_ADDRESS: ${ARTEL_ADMIN_SITE_ADDRESS:-:8090}
       # Paths under /<bucket>/ go to MinIO. install.sh refuses a bucket name that collides with a route.
       ARTEL_S3_BUCKET: ${ARTEL_S3_BUCKET:-artel}
     volumes:
@@ -181,6 +175,7 @@ services:
     ports:
       - "${ARTEL_HTTP_PORT:-8088}:80"
       - "${ARTEL_HTTPS_PORT:-8443}:443"
+      - "${ARTEL_ADMIN_PORT:-8090}:8090"
 
 volumes:
   postgres-data:
