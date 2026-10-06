@@ -1,0 +1,2 @@
+# install.sh and docker compose read secrets from here; never commit it.
+.env
