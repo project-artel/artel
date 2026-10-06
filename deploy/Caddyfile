@@ -1,9 +1,14 @@
-# One origin for everything, so the session cookies are first-party and no CORS setup is needed.
+# Two origins, so each frontend image can serve its bundle from the root path (both reference /assets/).
+# Each browser talks to its own origin, so no CORS setup is needed.
 #
+# Home site, ARTEL_SITE_ADDRESS:
 #   /api, /oauth2, /login/oauth2, /ws   orchestration server, public port 8080
-#   /admin/                              admin-page (built with base /admin/)
 #   /<bucket>/*                          MinIO, presigned upload and download URLs (path style)
-#   everything else                      artel-home
+#   everything else                      console container (artel-home), port 8080
+#
+# Admin site, ARTEL_ADMIN_SITE_ADDRESS:
+#   /api, /oauth2, /login/oauth2, /ws   orchestration server, public port 8080
+#   everything else                      admin container, port 8080
 #
 # The orchestration internal port 8081 is deliberately not routed here.
 {$ARTEL_SITE_ADDRESS::80} {
@@ -18,20 +23,29 @@
 	@orchestration path /api/* /oauth2/* /login/oauth2/* /ws/*
 	handle @orchestration {
 		# flush_interval -1 keeps server-sent event streams from being buffered.
+		# No header_up for X-Forwarded-For: Caddy already replaces a client-written value for untrusted
+		# clients, and the server rate-limits logins per leftmost address.
 		reverse_proxy orchestration:8080 {
 			flush_interval -1
-			# Overwrite, never append: the server rate-limits logins per leftmost X-Forwarded-For
-			# address, so a client-written header must not survive.
-			header_up X-Forwarded-For {remote_host}
 		}
 	}
 
-	handle /admin/* {
-		reverse_proxy admin-page:80
+	handle {
+		reverse_proxy artel-home:8080
 	}
-	redir /admin /admin/ permanent
+}
+
+{$ARTEL_ADMIN_SITE_ADDRESS::8090} {
+	encode zstd gzip
+
+	@orchestration path /api/* /oauth2/* /login/oauth2/* /ws/*
+	handle @orchestration {
+		reverse_proxy orchestration:8080 {
+			flush_interval -1
+		}
+	}
 
 	handle {
-		reverse_proxy artel-home:80
+		reverse_proxy admin-page:8080
 	}
 }
