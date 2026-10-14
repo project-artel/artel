@@ -60,9 +60,9 @@ false, `max_input_tokens` 922000 (1,050,000 − 128,000), `input_modalities`
 `["text","image","file"]`, reasoning kind `effort` with efforts
 `["max","xhigh","high","medium","low"]`, pricing null.
 
-## Database (orchestration, `V106__move_the_model_catalog_into_the_database.sql`)
+## Database (orchestration, `V107__move_the_model_catalog_into_the_database.sql`)
 
-V97 to V105 are taken on other branches, so this uses V106.
+V97 to V106 are taken on develop or on other open branches, so this uses V107.
 
 Table `llm_model`:
 
@@ -300,7 +300,8 @@ Either may be null. `toString` must keep hiding both values.
   orchestration server again.
 - orchestration `POST /api/admin/settings/llm/invalidate-cache` (ADMIN only) →
   `{ "agentServerInvalidated": true, "error": null }`. It calls
-  `POST {artel.agent.base-url}/internal/llm-cache/invalidate` with a 3-second timeout; a
+  `POST {artel.agent.base-url}/llm-cache/invalidate` with a 3-second timeout (the base URL
+  already ends in `/internal` in deployments, e.g. `http://agent-server:8000/internal`); a
   failure is reported in `error`, never thrown as 5xx.
 - The orchestration server also calls it, best effort, after saving or deleting either
   key and after `PATCH /api/admin/llm-models`. A failed call never fails the save.
