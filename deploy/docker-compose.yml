@@ -3,10 +3,11 @@
 # Easiest: run install.sh, which saves this file and fills in the secrets below.
 # By hand: save this file, replace every CHANGE_ME below (generate each with: openssl rand -hex 32),
 # then run: docker compose up -d   and open the public URL. The first account to sign up becomes the admin;
-# the admin page sets the OpenRouter key.
+# the admin page stores the OpenRouter key, and optionally the Bedrock key. There is no environment
+# variable for a provider key.
 #
 # This file holds secrets once you edit it. Do not commit it or share it. Back it up: if
-# x-secrets-key is lost or changed, the OpenRouter key saved on the admin page cannot be read.
+# x-secrets-key is lost or changed, the provider keys saved on the admin page cannot be read.
 # The build sections only matter in a clone of the repository: `docker compose build orchestration agent-server`.
 
 name: artel
@@ -19,14 +20,16 @@ x-public-url: &public_url http://localhost:8088
 x-admin-url: &admin_url http://localhost:8090
 # Signs session tokens. At least 32 bytes: the server refuses to start with the placeholder.
 x-jwt-secret: &jwt_secret CHANGE_ME
-# Encrypts the OpenRouter key saved on the admin page. Never change it after first start.
+# Required. Encrypts the provider keys (OpenRouter, Bedrock) saved on the admin page, which are stored
+# in the database. Generate one with: openssl rand -base64 48. Never change it after first start.
 x-secrets-key: &secrets_key CHANGE_ME
 x-db-password: &db_password CHANGE_ME
 # MinIO root user and password (object storage for uploads), at least 3 and 8 characters.
 x-s3-access-key: &s3_access_key CHANGE_ME
 x-s3-secret-key: &s3_secret_key CHANGE_ME
-# Optional. A single OpenRouter key covers every model; the admin page can set it instead and wins.
-x-openrouter-api-key: &openrouter_api_key ""
+# AWS region for bedrock/... models. The Bedrock key itself is entered on the admin page. Without a stored
+# key the agent server uses the standard AWS credential chain (for example an IAM role).
+x-bedrock-region: &bedrock_region us-west-2
 
 x-restart: &restart
   restart: unless-stopped
@@ -133,7 +136,8 @@ services:
       ARTEL_LOGIN_MAX_FAILURES: "10"
       ARTEL_LOGIN_FAILURE_WINDOW: PT15M
       ARTEL_LOGIN_ADDRESS_MAX_FAILURES: "100"
-      OPENROUTER_API_KEY: *openrouter_api_key
+      # Region for the admin page's Bedrock check. The agent server reads the same value.
+      BEDROCK_REGION: *bedrock_region
       # Optional GitHub login. The button is hidden unless both are set.
       # Callback URL: <public URL>/login/oauth2/code/github
       GITHUB_CLIENT_ID: ""
@@ -160,8 +164,9 @@ services:
     environment:
       APP_PORT: "8000"
       APP_ENV: production
-      # The key from the admin page wins; this is the fallback.
-      OPENROUTER_API_KEY: *openrouter_api_key
+      # Provider keys are not environment variables: the agent server fetches them from orchestration,
+      # which stores them encrypted. Only the Bedrock region is configured here.
+      BEDROCK_REGION: *bedrock_region
       # Internal port: the unauthenticated /internal/** API, reached only over the compose network.
       ORCHESTRATION_BASE_URL: http://orchestration:8081
       LANGSMITH_TRACING: "false"

@@ -123,6 +123,6 @@ ARTEL is starting in $install_dir
   Stop:     cd $install_dir && docker compose down
 
 The first account to sign up becomes the admin. Sign up at $public_url,
-then open the admin page to set your OpenRouter key.
+then open the admin page and enter your OpenRouter key (and optionally the Bedrock key).
 Edit $install_dir/docker-compose.yml to change settings, then run: docker compose up -d
 DONE
