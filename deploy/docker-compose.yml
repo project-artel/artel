@@ -3,7 +3,7 @@
 # Easiest: run install.sh, which saves this file and fills in the secrets below.
 # By hand: save this file, replace every CHANGE_ME below (generate each with: openssl rand -hex 32),
 # then run: docker compose up -d   and open the public URL. The first account to sign up becomes the admin;
-# the admin page stores the OpenRouter key, and optionally the Bedrock key. There is no environment
+# the admin page stores the OpenRouter key, and optionally the Bedrock key and the Claude API key. There is no environment
 # variable for a provider key.
 #
 # This file holds secrets once you edit it. Do not commit it or share it. Back it up: if
@@ -20,7 +20,7 @@ x-public-url: &public_url http://localhost:8088
 x-admin-url: &admin_url http://localhost:8090
 # Signs session tokens. At least 32 bytes: the server refuses to start with the placeholder.
 x-jwt-secret: &jwt_secret CHANGE_ME
-# Required. Encrypts the provider keys (OpenRouter, Bedrock) saved on the admin page, which are stored
+# Required. Encrypts the provider keys (OpenRouter, Bedrock, Claude API) saved on the admin page, which are stored
 # in the database. Generate one with: openssl rand -base64 48. Never change it after first start.
 x-secrets-key: &secrets_key CHANGE_ME
 x-db-password: &db_password CHANGE_ME
