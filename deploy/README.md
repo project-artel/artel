@@ -32,10 +32,10 @@ replaces the `CHANGE_ME` placeholders at the top of it with random secrets from 
 An existing `docker-compose.yml` is never overwritten, so running the script again only pulls and restarts.
 
 **The file now contains secrets. Do not commit it or share it, and back it up.**
-`x-secrets-key` encrypts the OpenRouter key saved on the admin page; if it is lost or changed the saved key is unreadable and must be entered again.
+`x-secrets-key` encrypts the OpenRouter and Bedrock keys saved on the admin page; if it is lost or changed the saved keys are unreadable and must be entered again.
 
 When it finishes, open `http://localhost:8088`. **The first account to sign up becomes the admin.**
-The admin page is at `http://localhost:8090` (`x-admin-url`), where the OpenRouter key can be set.
+The admin page is at `http://localhost:8090` (`x-admin-url`), where you sign in as the first account (the administrator) and enter the OpenRouter key, and optionally the Bedrock key, in the Settings tab. They are stored encrypted in the database.
 Both addresses use the same host name, and cookies are scoped by host name and not by port, so signing in on one is valid on the other.
 
 ## Addresses and ports
@@ -77,9 +77,10 @@ Every setting is in `docker-compose.yml`. The `x-` block at the top holds the va
 
 - `x-jwt-secret`: signs session tokens. The server refuses to start with fewer than 32 bytes, so a leftover `CHANGE_ME` stops the orchestration container with the error `ARTEL_JWT_SECRET must contain at least 32 bytes`.
 - `x-secrets-key`, `x-db-password`, `x-s3-access-key`, `x-s3-secret-key`: secrets. The server and the databases accept a leftover `CHANGE_ME` for these, so the stack starts and is weakly protected; replace all of them before use.
-  `x-secrets-key` must never change after first start.
+  `x-secrets-key` is required: it encrypts the provider keys that you enter on the admin page, and without a real value no key can be saved safely. Make one by hand with `openssl rand -base64 48`. It must never change after first start.
 - `x-public-url` and `x-admin-url`: the addresses people type, without a trailing slash. Keep the same host name in both, so one login works on both (cookies are scoped by host name, not by port).
-- `x-openrouter-api-key`: optional. The admin page can set the key, and its value wins.
+- `x-bedrock-region`: AWS region for `bedrock/...` models. Default `us-west-2`.
+- LLM provider keys are not environment variables and `OPENROUTER_API_KEY`, `LLM_API_KEY` and `BEDROCK_API_KEY` are no longer read. After the stack is up, sign in as the first account and enter the OpenRouter key, and optionally the Bedrock key, in the Settings tab of the admin page. Without a stored Bedrock key the agent server uses the standard AWS credential chain (for example an IAM role).
 
 Settings you rarely change are plain values under each service's `environment:`: `ARTEL_SIGNUP_OPEN` (public signup after the first account, default `false`),
 `ARTEL_GITHUB_SIGNUP_OPEN`, `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (the GitHub login button is hidden unless both are set; callback URL `<public URL>/login/oauth2/code/github`),
