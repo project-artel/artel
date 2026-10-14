@@ -3,11 +3,11 @@
 # Easiest: run install.sh, which saves this file and fills in the secrets below.
 # By hand: save this file, replace every CHANGE_ME below (generate each with: openssl rand -hex 32),
 # then run: docker compose up -d   and open the public URL. The first account to sign up becomes the admin;
-# the admin page stores the OpenRouter key, and optionally the Bedrock key and the Claude API key. There is no environment
-# variable for a provider key.
+# the console's admin settings (<public URL>/admin/settings, visible to administrators only) store the OpenRouter key, and
+# optionally the Bedrock key and the Claude API key. There is no environment variable for a provider key.
 #
 # This file holds secrets once you edit it. Do not commit it or share it. Back it up: if
-# x-secrets-key is lost or changed, the provider keys saved on the admin page cannot be read.
+# x-secrets-key is lost or changed, the provider keys saved in the admin settings cannot be read.
 # The build sections only matter in a clone of the repository: `docker compose build orchestration agent-server`.
 
 name: artel
@@ -16,18 +16,16 @@ name: artel
 # Public URL of the console, no trailing slash. To change the host port or name, change the URL and the
 # published ports of the proxy service (and the Caddy site addresses at the bottom) together.
 x-public-url: &public_url http://localhost:8088
-# URL of the admin page. Keep the same host name as the public URL so one login works on both.
-x-admin-url: &admin_url http://localhost:8090
 # Signs session tokens. At least 32 bytes: the server refuses to start with the placeholder.
 x-jwt-secret: &jwt_secret CHANGE_ME
-# Required. Encrypts the provider keys (OpenRouter, Bedrock, Claude API) saved on the admin page, which are stored
+# Required. Encrypts the provider keys (OpenRouter, Bedrock, Claude API) saved in the admin settings, which are stored
 # in the database. Generate one with: openssl rand -base64 48. Never change it after first start.
 x-secrets-key: &secrets_key CHANGE_ME
 x-db-password: &db_password CHANGE_ME
 # MinIO root user and password (object storage for uploads), at least 3 and 8 characters.
 x-s3-access-key: &s3_access_key CHANGE_ME
 x-s3-secret-key: &s3_secret_key CHANGE_ME
-# AWS region for bedrock/... models. The Bedrock key itself is entered on the admin page. Without a stored
+# AWS region for bedrock/... models. The Bedrock key itself is entered in the admin settings. Without a stored
 # key the agent server uses the standard AWS credential chain (for example an IAM role).
 x-bedrock-region: &bedrock_region us-west-2
 
@@ -121,9 +119,10 @@ services:
       # request including each 401, 403 and 404. Keep production logs at INFO.
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_REACTIVE: INFO
-      # The console origin is always allowed; this adds the admin page.
+      # The console origin is the only browser origin. Setting the list to it keeps the server's built-in
+      # list of artel.kr origins out of a self-hosted install.
       ARTEL_HOME_URL: *public_url
-      ARTEL_ALLOWED_ORIGINS: *admin_url
+      ARTEL_ALLOWED_ORIGINS: *public_url
       ARTEL_JWT_SECRET: *jwt_secret
       ARTEL_SECRETS_KEY: *secrets_key
       # Set to true only when the public URL is https, so cookies are sent over TLS only.
@@ -136,7 +135,7 @@ services:
       ARTEL_LOGIN_MAX_FAILURES: "10"
       ARTEL_LOGIN_FAILURE_WINDOW: PT15M
       ARTEL_LOGIN_ADDRESS_MAX_FAILURES: "100"
-      # Region for the admin page's Bedrock check. The agent server reads the same value.
+      # Region for the Bedrock check in the admin settings. The agent server reads the same value.
       BEDROCK_REGION: *bedrock_region
       # Optional GitHub login. The button is hidden unless both are set.
       # Callback URL: <public URL>/login/oauth2/code/github
@@ -173,16 +172,6 @@ services:
     expose:
       - "8000"
 
-  admin-page:
-    <<: *restart
-    image: ghcr.io/project-artel/admin:main
-    environment:
-      # The container replaces a placeholder in the bundle with these at start.
-      VITE_ORCHESTRATION_URL: *admin_url
-      VITE_HOME_URL: *public_url
-    expose:
-      - "8080"
-
   artel-home:
     <<: *restart
     image: ghcr.io/project-artel/console:develop
@@ -196,7 +185,6 @@ services:
     image: caddy:2-alpine
     depends_on:
       - orchestration
-      - admin-page
       - artel-home
     configs:
       - source: caddyfile
@@ -204,15 +192,14 @@ services:
     volumes:
       - caddy-data:/data
       - caddy-config:/config
-    # Host ports: console, TLS (used only when a Caddy site address is a host name), admin page.
+    # Host ports: console, and TLS (used only when a Caddy site address is a host name).
     ports:
       - "8088:80"
       - "8443:443"
-      - "8090:8090"
 
 # Caddy configuration. It cannot read the values at the top, so edit the ports above and the public URL together.
-# A host name instead of :80 or :8090 makes Caddy fetch a TLS certificate. The two sites are two origins
-# because each frontend image serves its bundle from the root path; each browser calls only its own origin.
+# A host name instead of :80 makes Caddy fetch a TLS certificate. The admin screens are part of the console
+# (/admin), so one site serves everything.
 # The orchestration internal port 8081 is deliberately not routed.
 configs:
   caddyfile:
@@ -236,21 +223,6 @@ configs:
 
         handle {
           reverse_proxy artel-home:8080
-        }
-      }
-
-      :8090 {
-        encode zstd gzip
-
-        @orchestration path /api/* /oauth2/* /login/oauth2/* /ws/*
-        handle @orchestration {
-          reverse_proxy orchestration:8080 {
-            flush_interval -1
-          }
-        }
-
-        handle {
-          reverse_proxy admin-page:8080
         }
       }
 

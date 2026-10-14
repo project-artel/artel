@@ -16,7 +16,7 @@ usage() {
 Usage: install.sh [--dir DIRECTORY] [--port HTTP_PORT] [--no-start]
 
   --dir DIRECTORY   install directory (default: $install_dir)
-  --port HTTP_PORT  host port for the web address (default: $http_port); only used when the file is created; the admin page stays on 8090
+  --port HTTP_PORT  host port for the web address (default: $http_port); only used when the file is created
   --no-start        write the files but do not start the stack
 USAGE
 }
@@ -113,16 +113,19 @@ fi
 docker compose pull --quiet || printf 'Could not pull some images; compose will use local copies if there are any.\n' >&2
 docker compose up -d
 
+# Read back from the file: on a re-run the file already existed and the branch above did not set it.
+public_url="$(sed -n 's/^x-public-url: &public_url //p' docker-compose.yml)"
+
 cat <<DONE
 
 ARTEL is starting in $install_dir
 
   Open:     $public_url
-  Admin:    $admin_url
+  Keys:     $public_url/admin/settings
   Logs:     cd $install_dir && docker compose logs -f
   Stop:     cd $install_dir && docker compose down
 
 The first account to sign up becomes the admin. Sign up at $public_url,
-then open the admin page and enter your OpenRouter key (and optionally the Bedrock key).
+then open $public_url/admin/settings and enter your OpenRouter key (and optionally the Bedrock key and the Claude API key).
 Edit $install_dir/docker-compose.yml to change settings, then run: docker compose up -d
 DONE
