@@ -21,7 +21,7 @@
 set -euo pipefail
 
 ORG=project-artel
-REPOS=(artel-agent-server artel-home artel-orchestration-server artel-sdk admin-page)
+REPOS=(artel-agent-server artel-home artel-orchestration-server artel-sdk)
 APPLY="${1:-}"
 
 # Labels this script assigns, beyond the GitHub defaults.

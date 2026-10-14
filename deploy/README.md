@@ -1,12 +1,13 @@
 # Self-hosting ARTEL
 
 This directory runs the whole product on one machine with Docker: PostgreSQL (pgvector), Valkey (the Redis-compatible store, service name `redis`), MinIO,
-the orchestration server, the agent server, the console (artel-home), the admin page, and a Caddy reverse proxy.
-The console and the admin page each have their own address, and each browser talks to its own address only, so no CORS setup is needed.
+the orchestration server, the agent server, the console (artel-home), and a Caddy reverse proxy.
+The console has one address, and the browser talks to that address only, so no CORS setup is needed.
+The administrator's screens (users, provider keys, models, and the cross-project dashboards) are part of the console under `/admin`, visible to administrators only.
 
 The images are the public ones that the organization's CI publishes on every push:
 `ghcr.io/project-artel/orchestration:develop`, `ghcr.io/project-artel/agent:develop`,
-`ghcr.io/project-artel/console:develop` (artel-home) and `ghcr.io/project-artel/admin:main` (admin-page).
+and `ghcr.io/project-artel/console:develop` (artel-home).
 There is no `latest` tag.
 
 ## Install with one command
@@ -24,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/project-artel/artel/main/deploy/ins
 | Flag | Default | Meaning |
 | --- | --- | --- |
 | `--dir DIRECTORY` | `$HOME/artel` | install directory |
-| `--port HTTP_PORT` | `8088` | host port of the web address; written into the public URL and the published port of a new file (the admin page stays on `8090`) |
+| `--port HTTP_PORT` | `8088` | host port of the web address; written into the public URL and the published port of a new file |
 | `--no-start` | off | write the file only |
 
 The script checks `docker`, `docker compose` (2.23.1 or later, otherwise it stops with an error) and `openssl`, downloads `docker-compose.yml`,
@@ -32,27 +33,24 @@ replaces the `CHANGE_ME` placeholders at the top of it with random secrets from 
 An existing `docker-compose.yml` is never overwritten, so running the script again only pulls and restarts.
 
 **The file now contains secrets. Do not commit it or share it, and back it up.**
-`x-secrets-key` encrypts the OpenRouter, Bedrock and Claude API keys saved on the admin page; if it is lost or changed the saved keys are unreadable and must be entered again.
+`x-secrets-key` encrypts the OpenRouter, Bedrock and Claude API keys saved in the admin settings; if it is lost or changed the saved keys are unreadable and must be entered again.
 
 When it finishes, open `http://localhost:8088`. **The first account to sign up becomes the admin.**
-The admin page is at `http://localhost:8090` (`x-admin-url`), where you sign in as the first account (the administrator) and enter the OpenRouter key, and optionally the Bedrock key and the Claude API key (Anthropic), in the Settings tab. They are stored encrypted in the database.
-Both addresses use the same host name, and cookies are scoped by host name and not by port, so signing in on one is valid on the other.
+Signed in as that account, open `http://localhost:8088/admin/settings` (the "관리" / "Admin" link in the top bar, then the Settings tab) and enter the OpenRouter key, and optionally the Bedrock key and the Claude API key (Anthropic). They are stored encrypted in the database.
 
 ## Addresses and ports
 
 | What | Where |
 | --- | --- |
 | Console (artel-home) | `x-public-url`, default `http://localhost:8088/` |
-| Admin page | `x-admin-url`, default `http://localhost:8090/`, its own origin served by the second Caddy site (published on host port `8090`) |
-| API, OAuth, WebSocket | `/api`, `/oauth2`, `/login/oauth2`, `/ws` on both origins, proxied to the orchestration server port 8080 |
+| Admin screens | `/admin` on the console origin, for administrators only; other accounts get the not-found page |
+| API, OAuth, WebSocket | `/api`, `/oauth2`, `/login/oauth2`, `/ws` on the console origin, proxied to the orchestration server port 8080 |
 | MinIO API | `/<bucket>/*` (default `/artel/*`) on the console origin, proxied to MinIO; MinIO has no published port |
 | Orchestration internal port 8081 | never published and never routed by the proxy |
 
-Both frontend images reference their assets at the root (`/assets/...`), so they cannot share one origin and each gets its own.
-
-The frontend containers listen on port 8080 and replace a placeholder in their bundle at start with the environment variables
-`VITE_ORCHESTRATION_URL` (both) and `VITE_HOME_URL` (admin only). Compose sets them from `x-public-url` and `x-admin-url`;
-the container exits if one is missing. When you change either URL, run `docker compose up -d` so the containers restart.
+The console container listens on port 8080 and replaces a placeholder in its bundle at start with the environment variable
+`VITE_ORCHESTRATION_URL`. Compose sets it from `x-public-url`;
+the container exits if it is missing. When you change the URL, run `docker compose up -d` so the container restarts.
 
 ## Docker Compose
 
@@ -77,10 +75,10 @@ Every setting is in `docker-compose.yml`. The `x-` block at the top holds the va
 
 - `x-jwt-secret`: signs session tokens. The server refuses to start with fewer than 32 bytes, so a leftover `CHANGE_ME` stops the orchestration container with the error `ARTEL_JWT_SECRET must contain at least 32 bytes`.
 - `x-secrets-key`, `x-db-password`, `x-s3-access-key`, `x-s3-secret-key`: secrets. The server and the databases accept a leftover `CHANGE_ME` for these, so the stack starts and is weakly protected; replace all of them before use.
-  `x-secrets-key` is required: it encrypts the provider keys that you enter on the admin page, and without a real value no key can be saved safely. Make one by hand with `openssl rand -base64 48`. It must never change after first start.
-- `x-public-url` and `x-admin-url`: the addresses people type, without a trailing slash. Keep the same host name in both, so one login works on both (cookies are scoped by host name, not by port).
+  `x-secrets-key` is required: it encrypts the provider keys that you enter in the admin settings, and without a real value no key can be saved safely. Make one by hand with `openssl rand -base64 48`. It must never change after first start.
+- `x-public-url`: the address people type, without a trailing slash.
 - `x-bedrock-region`: AWS region for `bedrock/...` models. Default `us-west-2`.
-- LLM provider keys are not environment variables and `OPENROUTER_API_KEY`, `LLM_API_KEY` and `BEDROCK_API_KEY` are no longer read. After the stack is up, sign in as the first account and enter the OpenRouter key, and optionally the Bedrock key and the Claude API key (Anthropic), in the Settings tab of the admin page. The `claude/...` models start switched off and are switched on after the admin page's check for the Claude API key passes. Without a stored Bedrock key the agent server uses the standard AWS credential chain (for example an IAM role).
+- LLM provider keys are not environment variables and `OPENROUTER_API_KEY`, `LLM_API_KEY` and `BEDROCK_API_KEY` are no longer read. After the stack is up, sign in as the first account and enter the OpenRouter key, and optionally the Bedrock key and the Claude API key (Anthropic), at `<public URL>/admin/settings`. The `claude/...` models start switched off and are switched on after the check for the Claude API key on that page passes. Without a stored Bedrock key the agent server uses the standard AWS credential chain (for example an IAM role).
 
 Settings you rarely change are plain values under each service's `environment:`: `ARTEL_SIGNUP_OPEN` (public signup after the first account, default `false`),
 `ARTEL_GITHUB_SIGNUP_OPEN`, `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (the GitHub login button is hidden unless both are set; callback URL `<public URL>/login/oauth2/code/github`),
@@ -88,7 +86,7 @@ Settings you rarely change are plain values under each service's `environment:`:
 The orchestration service also sets `LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB` and `..._REACTIVE` to `INFO`; the server's own default is `DEBUG`, which logs a line for every request.
 
 The published ports and the Caddy site addresses are literals, and the Caddy text cannot read the `x-` values. To change the port or serve from a host name, edit these together:
-the two URLs, the `ports:` of the `proxy` service, and the site addresses (`:80`, `:8090`) inside `configs:`.
+the public URL, the `ports:` of the `proxy` service, and the site address (`:80`) inside `configs:`.
 A host name as a site address makes Caddy fetch a TLS certificate; then use `https://` in the URLs and set `ARTEL_SECURE_COOKIE` to `"true"`.
 
 After editing the file, run `docker compose up -d` again.
@@ -105,7 +103,7 @@ The server's own S3 calls (screen captures) go to `http://minio:9000` over the c
 `ARTEL_S3_PRESIGN_ENDPOINT` (the public URL) is only the address written into presigned URLs. The
 compose file always passes MinIO credentials, so URLs are signed; they never take the unsigned anonymous form.
 
-No CORS setup is needed because each browser page calls its own origin.
+No CORS setup is needed because the browser calls the console origin only.
 
 MinIO image: Docker Hub no longer serves `minio/minio`, so the file uses `cgr.dev/chainguard/minio` on the `latest` tag, because Chainguard
 serves no versioned tags without a login. Replace the `image:` line with a pinned reference if you have access to one.
@@ -118,7 +116,7 @@ docker compose pull
 docker compose up -d
 ```
 
-The images track the `develop` branch (orchestration, agent, console) and the `main` branch (admin) of their repositories,
+The images track the `develop` branch (orchestration, agent, console) of their repositories,
 so an upgrade moves to whatever the branch holds at that moment. Your edited `docker-compose.yml` is kept. To stay on a fixed build, change the `image:` lines to a reference you pinned yourself.
 
 Database migrations run when the orchestration server starts.
@@ -149,5 +147,5 @@ Also back up the `artel_minio-data` volume (uploaded documents and screen captur
 agent server's own Dockerfile, `runtime` target. Compose names the result with the same image reference it would pull, so a
 local build is used in place of the published image until you run `docker compose pull`.
 
-Building the console and the admin page from a clone is not covered: those repositories have no Dockerfile, and their images come from the organization's CI.
+Building the console from a clone is not covered: that repository has no Dockerfile, and its image comes from the organization's CI.
 The backend images on `develop` contain new backend code only after the matching pull requests are merged there.
