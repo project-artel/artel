@@ -317,3 +317,60 @@ Either may be null. `toString` must keep hiding both values.
 `CreateQaRunRequest.model` and `CreateQaTryRequest.model`, when present, are checked against
 `llm_model` before anything is forwarded: unknown id → 400 `llm_model_unknown`, disabled →
 400 `llm_model_disabled`, each with a message naming the id.
+
+## Follow-up: Claude API key as a third route
+
+Requested on 2026-10-14 after the first PRs. Lands as extra commits on
+artel-orchestration-server#307 and artel-agent-server#224 (still drafts), plus new PRs for
+admin-page, onboarding and the root repo.
+
+### Route and catalog rows
+
+- Catalog id = `claude/` + the Anthropic model id. `claude/` routes to the Anthropic API with the
+  official SDK through `langchain-anthropic` (`ChatAnthropic`); `anthropic/...` stays OpenRouter
+  and `bedrock/...` stays Bedrock. Provider is `anthropic`.
+- Seed rows, appended to the V107 seed (not merged yet, so edited in place), all
+  `enabled = false` until an administrator stores a key and the check passes:
+
+| id | label | max_input_tokens | input | efforts | pricing per MTok (input / output / cache write / cache read) |
+| --- | --- | --- | --- | --- | --- |
+| `claude/claude-opus-5-5` | Claude Opus 5.5 (Claude API) | 872000 | text, image, file | max, xhigh, high, medium, low | 4.00 / 20.00 / 5.00 / 0.20 |
+| `claude/claude-sonnet-5-5` | Claude Sonnet 5.5 (Claude API) | 872000 | text, image, file | max, xhigh, high, medium, low | 2.00 / 10.00 / 2.50 / 0.20 |
+| `claude/claude-haiku-5-5` | Claude Haiku 5.5 (Claude API) | 872000 | text, image, file | max, xhigh, high, medium, low | 0.10 / 0.50 / 0.125 / 0.01, above 100K prompt tokens 0.50 / 2.50 / 0.625 / 0.05 |
+| `claude/claude-fable-5-1` | Claude Fable 5.1 (Claude API) | 872000 | text, image, file | max, xhigh, high, medium, low | 10.00 / 50.00 / 12.50 / 0.25 |
+
+  1M context minus 128K output = 872,000. Reasoning kind `effort`. `supports_strict_json` true
+  (structured outputs via `output_config.format`). Pricing `asOf` 2026-10-14, source "Anthropic
+  model table (claude-api skill, cached 2026-10-06)"; the cache write price is 1.25x input
+  (5-minute TTL). The Anthropic API does not return a cost, so these rows carry pricing.
+
+### Request shape (agent-server)
+
+- `temperature` is never sent (Opus 5.5 / Fable 5.1 reject sampling; Sonnet 5.5 / Haiku 5.5
+  reject non-default values). `max_tokens` 128,000 with streaming.
+- Effort → adaptive thinking plus `output_config.effort`. No effort chosen → omit both.
+- `ReasoningConfig.disabled` (router-style calls): Opus 5.5 and Fable 5.1 cannot turn thinking
+  off, so send effort `low`; Sonnet 5.5 sends `thinking: {type: "between_tools"}`; Haiku 5.5 sends
+  `thinking: {type: "disabled"}`. This mapping lives in code keyed by model id.
+- Never force `tool_choice` `any`/`tool` (400 on Opus 5.5, Sonnet 5.5, Fable 5.1); structured
+  output uses `json_schema`.
+- Prompt caching: top-level `cache_control: {type: "ephemeral"}` when `cache_prompt` is set.
+- Client is rebuilt when the stored key changes (same approach as Bedrock); a 401 drops the cached
+  key.
+
+### Key storage and API (orchestration)
+
+- `platform_setting` key `anthropic.api_key` (encrypted with `SecretCipher`, own associated data)
+  and `anthropic.last_check` (plain JSON).
+- `GET /internal/settings/llm` → `{ openrouterApiKey, bedrockApiKey, anthropicApiKey }`.
+- ADMIN only:
+  - `GET /api/admin/settings/anthropic` → `{ configured, maskedKey, updatedAt, lastCheck }`
+  - `PUT /api/admin/settings/anthropic` body `{ apiKey }`; null or blank deletes. 409
+    `secrets_key_missing` without `ARTEL_SECRETS_KEY`. Key must start with `sk-ant-`, 400
+    `invalid_api_key` otherwise.
+  - `POST /api/admin/settings/anthropic/check` → `{ checkedAt, keyConfigured, keyValid, models: [{ id, reachable, error }] }`.
+    One `GET https://api.anthropic.com/v1/models?limit=1000` with `x-api-key` and
+    `anthropic-version: 2023-06-01`; 401 → `keyValid` false; otherwise each **enabled** `claude/`
+    row is reachable when its model id appears in the list. Base URL is the property
+    `artel.anthropic.base-url` so tests use a fake server.
+- Saving or deleting the key triggers the agent-server cache invalidation, like the other keys.
