@@ -127,8 +127,11 @@ users), same session cookie, same `DESIGN.md` (byte-identical), same `tokens.css
   The graph track merges into `src/knowledge` instead of copying `admin-page/src/knowledgeGraph`.
   `src/projects/ProjectPicker` from admin-page moves once, into a shared place, before the
   dashboard tracks start.
-- [ ] **Step 4: Tests** — move the vitest files with their modules. artel-home has no
-  `npm test` script yet (`project.md` says "Not configured"); add vitest as admin-page has it.
+- [ ] **Step 4: Tests** — move the `*.test.ts` files with their modules and convert them from
+  vitest to `node:test`. artel-home already has `npm test` on Node's built-in runner
+  (`scripts/node-test-hooks.mjs`); its `project.md` saying "Not configured" is out of date. There is
+  no DOM renderer, so the `render.test.tsx` files do not move; the pull request lists what they
+  covered.
 - [ ] **Step 5: Docs and deploy**
   - Change every "admin page" mention to the console path: `deploy/docker-compose.yml`
     comments, `deploy/README.md`, `artel-orchestration-server/.env.example`,
