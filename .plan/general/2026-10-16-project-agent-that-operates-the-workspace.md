@@ -75,6 +75,19 @@ Decided in an interview with the user. Not reopened in this plan.
 - First version: content map generation (check game instance and build, run the evidence
   scan), QA run start, TC and test run authoring, lookup and summary.
 
+### Answered after the first draft (2026-10-16)
+
+- With the chat closed at the index route, `DashboardSection` shows there, as it does today.
+- On `RunEditPage` the project chat folds to the edge button and RunChat keeps the right
+  column. Reopening the project chat there is still possible by hand.
+- The project agent's model is one server setting, the same one the authoring chat uses
+  (`artel.agent.model`, `ARTEL_AGENT_MODEL`). No per-conversation model picker.
+- `query` lookups run in the browser through the existing api modules. Running them in
+  agent-server would need a new way to call orchestration on the user's behalf, and with
+  the agent stopping when the tab closes it would buy nothing.
+- Kept as proposed below: fixed tools, the 15 s reload window, conversations reachable from
+  the project only. The scan panel's ignored instance `<select>` is out of scope here.
+
 ## Facts checked on 2026-10-16
 
 Commits read: artel-home `9e9d8cc`, artel-orchestration-server `a0643c2`, artel-agent-server
@@ -224,7 +237,7 @@ orchestration, new package `kr.artel.orchestration.projectagent`, all under
 | Method and path | Purpose |
 | --- | --- |
 | `GET /` | the user's conversations in this project, newest first |
-| `POST /` `{model?, keySource?}` | start a conversation |
+| `POST /` | start a conversation; the model comes from the server setting |
 | `PATCH /{id}` `{title}` · `DELETE /{id}` | rename, delete |
 | `GET /{id}/messages` | the thread, for reopen |
 | `GET /{id}/stream` | SSE to the browser |
@@ -284,8 +297,9 @@ Fixed tools (defined in agent-server):
 The page catalog (which pages exist, their params, and each page's actions with JSON
 schemas and risk) is a static TypeScript module in artel-home, sent to orchestration when a
 conversation's session opens and forwarded in the system prompt. Fixed tools keep the tool
-list stable across pages, so the prompt cache survives navigation. Open question 3 covers
-the alternative of one typed tool per action.
+list stable across pages, so the prompt cache survives navigation. One typed tool per action
+was considered and dropped: it would give the model argument schemas directly, but the tool
+list would change on every page and break the cache.
 
 ### Page action registry (React)
 
@@ -429,8 +443,11 @@ lost to a restart or a Redis TTL is reopened from the database, not lost.
 
 ### Layout shell
 
-- `ProjectWorkspace` renders `rail | page slot | SplitHandle | chat`. The index route renders
-  an empty page slot, so the chat takes the full width beside the rail.
+- `ProjectWorkspace` renders `rail | page slot | SplitHandle | chat`. With the chat open, the
+  index route renders an empty page slot, so the chat takes the full width beside the rail.
+  With the chat closed, the index route renders `DashboardSection`.
+- On `RunEditPage` the chat folds to the edge button on entry, so RunChat keeps the right
+  column. Leaving the page restores the stored open state.
 - Chat open state and width are stored in `localStorage` (`artel.projectAgent.open`,
   `artel.projectAgent.width`), so the rail and reloads keep them. Width reuses the
   `useChatWidth` clamping with a 640px page minimum (the `DESIGN.md` viewport minimum).
@@ -452,8 +469,9 @@ PR-sized phases. Inside each phase the tracks have disjoint write scopes.
   page still renders at 1024px beside the rail.
 - [ ] `src/projectAgent/AgentDock.tsx`: page slot, `SplitHandle`, chat column, closed state,
   edge reopen button with a badge slot. Chat content is a placeholder in this PR.
-- [ ] Index route renders the empty page slot instead of `DashboardSection` (see open
-  question 1 for what the closed chat shows there).
+- [ ] Index route renders the empty page slot while the chat is open, and
+  `DashboardSection` while it is closed.
+- [ ] `RunEditPage` folds the chat to the edge button on entry.
 - [ ] i18n strings in `src/i18n/messages/projectAgent.ts` (`en`, `ko`).
 - [ ] `node:test` for the width clamping and the open-state storage.
 
@@ -478,8 +496,8 @@ Three tracks in parallel, one per repository.
 - [ ] agent-server: `app/api/project_agent.py`, `app/agents/project_agent/` (`create_agent`,
   fixed tools, `ProjectAgentChannel`, call and model limits as in the scenario agent, prompt
   under `app/prompts/`), `PROJECT_AGENT` in `usage.py`, pytest with a fake channel.
-- [ ] artel-home: `ProjectAgentChat` (thread, composer, conversation list, model picker from
-  `/api/qa-models`), `useProjectAgentSession` (SSE, tool dispatch to the registry),
+- [ ] artel-home: `ProjectAgentChat` (thread, composer, conversation list),
+  `useProjectAgentSession` (SSE, tool dispatch to the registry),
   `query` handlers for QA history, issues, usage and performance.
 
 ### Phase 4 — content map generation
@@ -532,7 +550,6 @@ Three tracks in parallel, one per repository.
     replica would route a `tool-results` POST to an instance without the WS.
   - Nesting the deep pages under the workspace layout changes their width; `RunEditPage`
     already has its own chat column and `QaRunPage` a stream viewport.
-  - Two agents on screen: `RunEditPage` shows RunChat while the project chat is open.
   - A page that renders its button conditionally (`target()` null) cannot be highlighted.
     The action must report `blocked` instead of running unseen.
   - Model cost: every turn re-reads the page catalog; keep it in the cached prefix.
@@ -543,19 +560,5 @@ Three tracks in parallel, one per repository.
 
 ## Open Questions
 
-1. With the chat closed at the index route there is no page to show. Show
-   `DashboardSection` there, or an empty state with the reopen button?
-2. On `RunEditPage`, which chat wins the right column: hide RunChat while the project chat is
-   open, or close the project chat on that page?
-3. Fixed tools (`call_action` with an action id) or one typed tool per action generated from
-   the catalog? Fixed tools keep the prompt cache across pages; typed tools give the model
-   argument schemas directly.
-4. Which model by default, and may the user pick per conversation? The authoring chat uses a
-   server setting (`ARTEL_AGENT_MODEL`); the QA run lets the user pick. A tool-heavy loop
-   needs a model that handles 7 tools well.
-5. Should `query` lookups run in the browser (decision: tools run in the browser) or as
-   server tools in orchestration, which would let a summary run without a tab?
-6. The scan always picks the instance itself. Should the agent still show the instance
-   `<select>` in `EvidenceScanPanel`, which the server ignores?
-7. How long may a reload take before the turn is cancelled (15 s proposed)?
-8. Should the conversation list be per project only, or also reachable from `/projects`?
+None. The eight questions of the first draft were answered on 2026-10-16; see "Answered
+after the first draft".
