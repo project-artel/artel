@@ -41,7 +41,7 @@ Signed in as that account, open `http://localhost:8088/admin/settings` (the "관
 
 ## Telemetry (선택, 기본 꺼짐)
 
-telemetry 는 admin 이 동의한 설치만 하루에 한 번 집계된 사용 보고서를 ARTEL 팀의 서버(`https://stage-orch.artel.kr/api/telemetry/reports`)로 보낸다.
+telemetry 는 admin 이 동의한 설치만 하루에 한 번 집계된 사용 보고서를 ARTEL 팀의 서버(`https://stage-orch.artel.kr/telemetry/reports`)로 보낸다.
 동의하기 전에는 아무것도 보내지 않는다.
 
 켜는 방법은 세 가지다.

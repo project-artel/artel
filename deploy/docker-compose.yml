@@ -134,7 +134,7 @@ services:
       ARTEL_SIGNUP_OPEN: "false"
       # Nothing is sent unless consent is on.
       ARTEL_TELEMETRY: *telemetry_consent
-      ARTEL_TELEMETRY_URL: https://stage-orch.artel.kr/api/telemetry/reports
+      ARTEL_TELEMETRY_URL: https://stage-orch.artel.kr/telemetry/reports
       # With false, a GitHub account signs in only when an admin created a user with the same email.
       ARTEL_GITHUB_SIGNUP_OPEN: "false"
       # Login rate limit: failures per email or per client address inside the window before a 429.

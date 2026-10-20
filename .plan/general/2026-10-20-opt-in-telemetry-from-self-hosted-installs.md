@@ -62,7 +62,7 @@ From the survey (paths relative to each repository):
 1. **Where the switch lives.** Two settings:
    - `ARTEL_TELEMETRY_URL` (orchestration, `artel.telemetry.endpoint`). Blank by default in
      `application.yml`, so the hosted artel.kr server never sends and hides the admin section.
-     `deploy/docker-compose.yml` sets it to `https://stage-orch.artel.kr/api/telemetry/reports`, the
+     `deploy/docker-compose.yml` sets it to `https://stage-orch.artel.kr/telemetry/reports`, the
      same host `artel-cli` already uses as its default (`artel-cli/src/config.ts:7`).
    - Consent. The effective value is the `telemetry.consent` platform setting when present, else the
      `ARTEL_TELEMETRY` environment variable (`on` or `off`, default `off`). Once an admin decides in
@@ -102,11 +102,11 @@ From the survey (paths relative to each repository):
    is before yesterday, it sends each missing day, oldest first, at most 7 days back, then stores
    `telemetry.last_sent_date`. Timeout 10 seconds, failure logs a warning and retries next hour.
    Each send logs one INFO line with the report date and byte size.
-8. **Receiving** (artel.kr orchestration). `POST /api/telemetry/reports`, `permitAll`, body limit
+8. **Receiving** (artel.kr orchestration). `POST /telemetry/reports`, `permitAll`, body limit
    256 KB, JSON schema validated, an in-memory limiter of 30 requests per hour per address, answers 204.
    Stored in `telemetry_report` (`install_id`, `report_date`, `schema_version`, `report` JSONB,
    `received_at`), unique on `install_id, report_date` and upserted. The sender address is not stored.
-   `DELETE /api/telemetry/reports/{installId}` deletes all rows for that install; the admin toggle offers
+   `DELETE /telemetry/reports/{installId}` deletes all rows for that install; the admin toggle offers
    it when turning consent off.
 9. **Version.** Orchestration reads `ARTEL_VERSION` (set by the image build, the compose image tag as
    fallback). No static pom value is sent.
@@ -146,8 +146,8 @@ From the survey (paths relative to each repository):
 | `GET /api/admin/settings/telemetry` | admin | `{ available, enabled, source: "setting"\|"environment", installId, lastSentDate }` |
 | `PUT /api/admin/settings/telemetry` | admin | `{ enabled, deleteSentData? }` |
 | `GET /api/admin/settings/telemetry/preview` | admin | the report JSON for yesterday, exactly as it would be sent |
-| `POST /api/telemetry/reports` | public, artel.kr | report JSON, answers 204 |
-| `DELETE /api/telemetry/reports/{installId}` | public, artel.kr | answers 204 |
+| `POST /telemetry/reports` | public, artel.kr | report JSON, answers 204 |
+| `DELETE /telemetry/reports/{installId}` | public, artel.kr | answers 204 |
 
 ## Validation
 
