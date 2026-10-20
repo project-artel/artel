@@ -28,7 +28,8 @@ x-s3-secret-key: &s3_secret_key CHANGE_ME
 # AWS region for bedrock/... models. The Bedrock key itself is entered in the admin settings. Without a stored
 # key the agent server uses the standard AWS credential chain (for example an IAM role).
 x-bedrock-region: &bedrock_region us-west-2
-# Daily aggregated usage report to the ARTEL team: "on" or "off". Off by default; install.sh --telemetry writes "on".
+# Daily usage statistics (totals only) to the ARTEL team: "on" or "off". Off by default; install.sh --telemetry writes "on".
+# deploy/README.md lists every value that is sent.
 # Once an admin decides in /admin/settings, that choice wins over this value.
 x-telemetry: &telemetry_consent "off"
 

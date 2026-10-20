@@ -19,7 +19,7 @@ Usage: install.sh [--dir DIRECTORY] [--port HTTP_PORT] [--no-start] [--telemetry
   --dir DIRECTORY   install directory (default: $install_dir)
   --port HTTP_PORT  host port for the web address (default: $http_port); only used when the file is created
   --no-start        write the files but do not start the stack
-  --telemetry       send a daily aggregated usage report to the ARTEL team (default: off;
+  --telemetry       send daily usage statistics (totals only) to the ARTEL team (default: off;
                     ARTEL_TELEMETRY=on does the same); only used when the file is created
 USAGE
 }
@@ -119,7 +119,7 @@ fi
 # Read back from the file so that a re-run reports what the existing file says, not what the flag said.
 print_telemetry_note() {
   if grep -q '^x-telemetry: &telemetry_consent "on"$' docker-compose.yml; then
-    printf 'Telemetry is on (daily aggregated usage report). Turn it off in /admin/settings.\n'
+    printf 'Telemetry is on (daily usage statistics, totals only). Turn it off in /admin/settings.\n'
   else
     printf 'Telemetry is off. Turn it on with --telemetry or in /admin/settings.\n'
   fi
