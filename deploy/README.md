@@ -49,7 +49,7 @@ admin 이 동의한 설치만 UTC 기준 하루에 한 번 그날의 사용 통�
 `/admin/settings` 에서는 다음에 보낼 JSON 을 그대로 볼 수 있다. admin 이 화면에서 한 번 정하면 그 값이 `x-telemetry` 보다 우선한다.
 끌 때는 이미 보낸 통계를 삭제하도록 요청할 수 있다. `ARTEL_TELEMETRY_URL` 을 비우면 보내는 기능 자체가 꺼진다.
 
-보내는 값은 아래가 전부다(`schemaVersion: 1`).
+보내는 값(`schemaVersion: 1`)
 
 설치 정보(`install`)
 
