@@ -28,10 +28,6 @@ x-s3-secret-key: &s3_secret_key CHANGE_ME
 # AWS region for bedrock/... models. The Bedrock key itself is entered in the admin settings. Without a stored
 # key the agent server uses the standard AWS credential chain (for example an IAM role).
 x-bedrock-region: &bedrock_region us-west-2
-# Daily usage statistics (totals only) to the ARTEL team: "on" or "off". Off by default; install.sh --telemetry writes "on".
-# deploy/README.md lists every value that is sent.
-# Once an admin decides in /admin/settings, that choice wins over this value.
-x-telemetry: &telemetry_consent "off"
 
 x-restart: &restart
   restart: unless-stopped
@@ -133,8 +129,7 @@ services:
       ARTEL_SECURE_COOKIE: "false"
       # The first account to sign up becomes the admin. After that, public signup is closed unless true.
       ARTEL_SIGNUP_OPEN: "false"
-      # Nothing is sent unless consent is on.
-      ARTEL_TELEMETRY: *telemetry_consent
+      # Usage statistics go here once a day, only after an admin agrees on the first visit to /admin. Blank: never asked, never sent.
       ARTEL_TELEMETRY_URL: https://stage-orch.artel.kr/telemetry/reports
       # With false, a GitHub account signs in only when an admin created a user with the same email.
       ARTEL_GITHUB_SIGNUP_OPEN: "false"

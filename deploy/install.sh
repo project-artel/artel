@@ -10,17 +10,14 @@ install_dir="${ARTEL_INSTALL_DIR:-$HOME/artel}"
 http_port="${ARTEL_HTTP_PORT:-8088}"
 base_url="${ARTEL_DEPLOY_BASE_URL:-https://raw.githubusercontent.com/project-artel/artel/main/deploy}"
 start_stack=1
-telemetry="${ARTEL_TELEMETRY:-off}"
 
 usage() {
   cat <<USAGE
-Usage: install.sh [--dir DIRECTORY] [--port HTTP_PORT] [--no-start] [--telemetry]
+Usage: install.sh [--dir DIRECTORY] [--port HTTP_PORT] [--no-start]
 
   --dir DIRECTORY   install directory (default: $install_dir)
   --port HTTP_PORT  host port for the web address (default: $http_port); only used when the file is created
   --no-start        write the files but do not start the stack
-  --telemetry       send daily usage statistics (totals only) to the ARTEL team (default: off;
-                    ARTEL_TELEMETRY=on does the same); only used when the file is created
 USAGE
 }
 
@@ -34,7 +31,6 @@ while [ $# -gt 0 ]; do
     --dir) [ $# -ge 2 ] || fail "--dir needs a value"; install_dir="$2"; shift 2 ;;
     --port) [ $# -ge 2 ] || fail "--port needs a value"; http_port="$2"; shift 2 ;;
     --no-start) start_stack=0; shift ;;
-    --telemetry) telemetry=on; shift ;;
     -h|--help) usage; exit 0 ;;
     *) usage >&2; fail "unknown flag: $1" ;;
   esac
@@ -42,11 +38,6 @@ done
 
 case "$http_port" in
   ''|*[!0-9]*) fail "--port must be a number" ;;
-esac
-
-case "$telemetry" in
-  on|off) ;;
-  *) fail "ARTEL_TELEMETRY must be on or off" ;;
 esac
 
 command -v docker >/dev/null 2>&1 || fail "docker is not installed. See https://docs.docker.com/engine/install/"
@@ -96,7 +87,6 @@ else
     -v s3a="$(openssl rand -hex 8)" \
     -v s3s="$(openssl rand -hex 24)" \
     -v port="$http_port" \
-    -v telemetry="$telemetry" \
     -v url="$public_url" '
     $0 == "x-jwt-secret: &jwt_secret CHANGE_ME"     { print "x-jwt-secret: &jwt_secret " jwt; next }
     $0 == "x-secrets-key: &secrets_key CHANGE_ME"   { print "x-secrets-key: &secrets_key " key; next }
@@ -104,7 +94,6 @@ else
     $0 == "x-s3-access-key: &s3_access_key CHANGE_ME" { print "x-s3-access-key: &s3_access_key " s3a; next }
     $0 == "x-s3-secret-key: &s3_secret_key CHANGE_ME" { print "x-s3-secret-key: &s3_secret_key " s3s; next }
     $0 == "x-public-url: &public_url http://localhost:8088" { print "x-public-url: &public_url " url; next }
-    $0 == "x-telemetry: &telemetry_consent \"off\"" { print "x-telemetry: &telemetry_consent \"" telemetry "\""; next }
     $0 == "      - \"8088:80\"" { print "      - \"" port ":80\""; next }
     { print }
   ' docker-compose.yml.tmp > docker-compose.yml
@@ -116,17 +105,7 @@ else
   printf 'Wrote docker-compose.yml with generated secrets. It now holds secrets: do not commit or share it.\n'
 fi
 
-# Read back from the file so that a re-run reports what the existing file says, not what the flag said.
-print_telemetry_note() {
-  if grep -q '^x-telemetry: &telemetry_consent "on"$' docker-compose.yml; then
-    printf 'Telemetry is on (daily usage statistics, totals only). Turn it off in /admin/settings.\n'
-  else
-    printf 'Telemetry is off. Turn it on with --telemetry or in /admin/settings.\n'
-  fi
-}
-
 if [ "$start_stack" -eq 0 ]; then
-  print_telemetry_note
   printf 'Files are in %s. Start the stack with: cd %s && docker compose up -d\n' "$install_dir" "$install_dir"
   exit 0
 fi
@@ -149,6 +128,4 @@ ARTEL is starting in $install_dir
 The first account to sign up becomes the admin. Sign up at $public_url,
 then open $public_url/admin/settings and enter your OpenRouter key (and optionally the Bedrock key and the Claude API key).
 Edit $install_dir/docker-compose.yml to change settings, then run: docker compose up -d
-
 DONE
-print_telemetry_note

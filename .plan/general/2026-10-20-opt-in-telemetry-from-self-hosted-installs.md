@@ -67,14 +67,16 @@ From the survey (paths relative to each repository):
    - Consent. The effective value is the `telemetry.consent` platform setting when present, else the
      `ARTEL_TELEMETRY` environment variable (`on` or `off`, default `off`). Once an admin decides in
      the UI, the database value wins over the environment.
-2. **Where consent is asked.**
-   - `install.sh --telemetry` or `ARTEL_TELEMETRY=on sh install.sh` writes `on` into a new
-     `x-telemetry` anchor. Without either, it writes `off` and prints one line saying how to turn it on.
-   - The first-admin signup form shows an unchecked checkbox when `GET /api/auth/providers` reports
-     `telemetryAvailable: true` and no consent is stored. `SignupRequest` gets
-     `telemetryOptIn: Boolean? = null`, written inside the signup transaction for the first user only.
-   - `/admin/settings` gets a telemetry section: toggle, install id, last sent date, and a preview of
-     the exact JSON that the next report will send.
+2. **Where consent is asked.** (Revised 2026-10-20 after review: nobody turns on an install flag or
+   finds a "telemetry" setting on their own.)
+   - The first time an admin opens any `/admin` screen and no admin has decided yet
+     (`available && source == "environment" && !enabled`), a dialog asks whether to send usage statistics
+     to help improve ARTEL, with "send" and "don't send". Either answer is stored, so it asks once.
+     Closing without an answer asks again next visit.
+   - `/admin/settings` has a "usage statistics" section to change it later, with the full list of values
+     and a preview of the exact JSON.
+   - No `install.sh` flag, no compose consent anchor, no signup checkbox. The UI never says "telemetry".
+   - `ARTEL_TELEMETRY` stays as a server fallback for operators, default `off`, but is not in the compose file.
 3. **Install id.** A random UUID stored as `telemetry.install_id`, created the first time consent turns
    on. It identifies an install, not a person, and it is the only key the receiver stores.
 4. **Report content** (`schemaVersion: 1`, one per UTC day, built only from that day's rows):
