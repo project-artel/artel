@@ -317,6 +317,11 @@ export function logDir(options?: Pick<SupervisorOptions, 'dataDir'>): string;
   `storage/`, `home/` (dist with the placeholder replaced), `logs/<service>.log`, `runtime/<version>/`.
 - Proxy: `/api/*`, `/oauth2/*`, `/login/oauth2/*`, `/ws/*` go to orchestration with WebSocket upgrade and no
   response buffering; everything else is served from `home/`, falling back to `index.html`.
+- Added in ARTEL-1144 (2026-10-20): the proxy also answers `GET /__artel/supervisor` (the liveness check, returns
+  the supervisor pid) and `POST /__artel/supervisor/stop`, which needs the `controlToken` from `state.json` (0600)
+  in a header; `stopStack` uses it because Windows has no SIGTERM. A `supervisor.lock` file guards start.
+  Postgres settings live in `pgdata/artel.conf`; postgres tools run with `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH`
+  set to `postgres/lib`.
 
 ### 4. CLI inside the desktop app (ARTEL-1146 ships, ARTEL-1144 honours)
 
