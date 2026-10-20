@@ -27,6 +27,7 @@ curl -fsSL https://raw.githubusercontent.com/project-artel/artel/main/deploy/ins
 | `--dir DIRECTORY` | `$HOME/artel` | install directory |
 | `--port HTTP_PORT` | `8088` | host port of the web address; written into the public URL and the published port of a new file |
 | `--no-start` | off | write the file only |
+| `--telemetry` | off | 새 `docker-compose.yml` 을 만들 때 `x-telemetry` 에 `on` 을 쓴다. 환경 변수 `ARTEL_TELEMETRY=on` 도 같다 |
 
 The script checks `docker`, `docker compose` (2.23.1 or later, otherwise it stops with an error) and `openssl`, downloads `docker-compose.yml`,
 replaces the `CHANGE_ME` placeholders at the top of it with random secrets from `openssl rand`, and runs `docker compose up -d`.
@@ -37,6 +38,34 @@ An existing `docker-compose.yml` is never overwritten, so running the script aga
 
 When it finishes, open `http://localhost:8088`. **The first account to sign up becomes the admin.**
 Signed in as that account, open `http://localhost:8088/admin/settings` (the "관리" / "Admin" link in the top bar, then the Settings tab) and enter the OpenRouter key, and optionally the Bedrock key and the Claude API key (Anthropic). They are stored encrypted in the database.
+
+## Telemetry (선택, 기본 꺼짐)
+
+telemetry 는 admin 이 동의한 설치만 하루에 한 번 집계된 사용 보고서를 ARTEL 팀의 서버(`https://stage-orch.artel.kr/api/telemetry/reports`)로 보낸다.
+동의하기 전에는 아무것도 보내지 않는다.
+
+켜는 방법은 세 가지다.
+
+- `install.sh --telemetry` 또는 `ARTEL_TELEMETRY=on sh install.sh`: 새로 만드는 `docker-compose.yml` 의 `x-telemetry` 에 `on` 을 쓴다. 이미 있는 파일은 건드리지 않으므로, 그 경우에는 `x-telemetry` 를 직접 고치고 `docker compose up -d` 를 다시 실행한다.
+- 첫 admin 가입 화면의 체크박스(기본 해제).
+- `/admin/settings` 의 telemetry 항목. 다음 보고서에 들어갈 JSON 을 미리 볼 수 있다.
+
+admin 이 화면에서 한 번 정하면 그 값이 `x-telemetry` 보다 우선한다. 끌 때는 이미 보낸 데이터를 삭제하도록 요청할 수 있다.
+`ARTEL_TELEMETRY_URL` 을 비우면 보내는 기능 자체가 꺼진다.
+
+보내는 내용(`schemaVersion: 1`, UTC 하루 단위):
+
+- 설치: 무작위 install id, orchestration 버전, agent-server 버전, 보고 날짜.
+- QA agent 구조별(`agentArch`, `agentFingerprint`, `model`, `reasoningEffort`): 시도 횟수와 status 별 횟수, step 과 test case 의 전체 수와 통과 수, 실행 시간의 합과 최댓값, 내장 tool 이름별 호출 횟수. 내장 목록에 없는 tool 이름은 `other` 로 합산한다.
+- LLM 사용량(`service`, `provider`, `model`, `keySource` 별): 호출 수, token 합계 다섯 가지, 비용(USD) 합계, latency 합계.
+- 오류(`source`, `code`, `exceptionType` 별): 횟수와 첫 발생 위치의 frame 최대 10개(`module:function:line` 형식, 파일 경로 없음). 오류 메시지는 보내지 않는다.
+
+보내지 않는 것:
+
+- QA run 의 원본 기록: `qa_log` 메시지, agent 의 추론, action, screen capture, game state.
+- content map, knowledge 문서, scenario, test case 본문, 프로젝트 이름과 게임 이름.
+- 사용자 정보: email, 이름, user id, IP 주소. 받는 서버는 보낸 쪽 IP 주소를 저장하지 않는다.
+- 오류 메시지 본문.
 
 ## Addresses and ports
 
