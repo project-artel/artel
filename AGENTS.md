@@ -30,6 +30,11 @@ Two audiences, two languages. The directory settles which one a file is.
 - Before designing or changing React UI, Replay Studio, QA timeline, evidence, or agent-status interfaces, read `.agents/docs/DESIGN.md` and follow it.
 - Unless a task explicitly requires otherwise, use its semantic tokens, layouts, components, states, and accessibility rules as the project defaults.
 
+## User-facing copy
+
+- Before writing or changing text that a user reads — the onboarding site, the console (`artel-home`), the admin screens, the desktop app (`artel-desktop`) — read [`onboarding/.agents/docs/user-copy.md`](onboarding/.agents/docs/user-copy.md) and follow it.
+- Ask the user before adding copy that was not requested.
+
 ## Notion workspace
 
 - Before reading from or writing to the ARTEL Notion workspace, read [`.agents/docs/NOTION.md`](.agents/docs/NOTION.md) and follow it.
