@@ -207,6 +207,10 @@ JVM options from the supervisor: `-Xmx512m -XX:+UseSerialGC`.
 
 Filesystem storage URLs (ARTEL-1142): `<ARTEL_HOME_URL>/api/storage/objects/<objectKey>?expires=<epochSeconds>&signature=<hex HMAC-SHA256>`.
 `PUT` uploads, `GET` downloads. They sit under `/api`, so the proxy needs no extra route.
+Download URLs also carry `&filename=<name>` (covered by the signature) because callers ask for different
+`Content-Disposition` names for the same object, as S3's `response-content-disposition` does. Consumers treat
+the URL as opaque. The signing key is derived from `ARTEL_JWT_SECRET` (label `artel/storage-url-signature/v1`),
+so rotating that secret invalidates issued URLs. (Amended 2026-10-20 after ARTEL-1142.)
 
 agent-server (ARTEL-1143 adds `SESSION_STORE`):
 
