@@ -34,3 +34,7 @@
 	path = .github
 	url = https://github.com/project-artel/.github.git
 	branch = main
+[submodule "artel-desktop"]
+	path = artel-desktop
+	url = https://github.com/project-artel/artel-desktop.git
+	branch = main
