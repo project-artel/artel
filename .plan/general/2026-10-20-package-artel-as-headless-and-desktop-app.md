@@ -179,3 +179,144 @@ artel (CLI, Node)                       ARTEL Desktop (Electron)
 2. ~~Bundle placement~~: decided 2026-10-20, inside the installer.
 3. ~~Repository~~: decided 2026-10-20, new submodule `artel-desktop`.
 4. ~~arm64~~: decided 2026-10-20, Windows arm64 and Linux arm64 ship in the first release.
+
+## Shared contract (fixed before the parallel tracks start, 2026-10-20)
+
+Jira: story ARTEL-1140. Subtasks: ARTEL-1141 orchestration store, ARTEL-1142 orchestration storage,
+ARTEL-1143 agent-server store, ARTEL-1144 CLI supervisor, ARTEL-1145 runtime bundle, ARTEL-1146 Electron app.
+A track that needs to change anything in this section stops and reports instead of changing it alone.
+
+### 1. Service environment variables in bundled mode
+
+orchestration (ARTEL-1141, ARTEL-1142 add the first three; the rest already exist):
+
+| Variable | Bundled value | Default when unset |
+| --- | --- | --- |
+| `ARTEL_STORE` | `postgres` | `redis` |
+| `ARTEL_STORAGE` | `filesystem` | `s3` |
+| `ARTEL_STORAGE_DIR` | `<dataDir>/storage` | none, required when `ARTEL_STORAGE=filesystem` |
+| `SERVER_PORT`, `ARTEL_INTERNAL_API_PORT` | chosen ports | 8080, 8081 |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_SSL_MODE` | `127.0.0.1`, chosen, `artel`, `artel`, generated, `disable` | |
+| `ARTEL_AGENT_BASE_URL`, `ARTEL_AGENT_WS_BASE_URL` | `http://127.0.0.1:<agent>/internal`, `ws://127.0.0.1:<agent>/internal` | |
+| `ARTEL_HOME_URL`, `ARTEL_ALLOWED_ORIGINS` | public URL | |
+| `ARTEL_JWT_SECRET`, `ARTEL_SECRETS_KEY` | generated | |
+| `ARTEL_SECURE_COOKIE`, `ARTEL_SIGNUP_OPEN`, `ARTEL_GITHUB_SIGNUP_OPEN` | `false`, `false`, `false` | |
+| `LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB`, `..._WEB_REACTIVE` | `INFO` | |
+
+JVM options from the supervisor: `-Xmx512m -XX:+UseSerialGC`.
+
+Filesystem storage URLs (ARTEL-1142): `<ARTEL_HOME_URL>/api/storage/objects/<objectKey>?expires=<epochSeconds>&signature=<hex HMAC-SHA256>`.
+`PUT` uploads, `GET` downloads. They sit under `/api`, so the proxy needs no extra route.
+
+agent-server (ARTEL-1143 adds `SESSION_STORE`):
+
+| Variable | Bundled value | Default |
+| --- | --- | --- |
+| `SESSION_STORE` | `memory` | `redis` |
+| `APP_PORT` | chosen port | |
+| `APP_ENV` | `production` | |
+| `ORCHESTRATION_BASE_URL` | `http://127.0.0.1:<internal port>` | |
+| `LANGSMITH_TRACING` | `false` | |
+
+Start command: `<python> -m uvicorn app.main:app --host 127.0.0.1 --port <APP_PORT>` with the working directory
+`<runtimeDir>/agent-server`. Health: `GET /health` (outside the `/internal` prefix) answers 200.
+orchestration has no health route: the supervisor treats any HTTP response from `GET /api/auth/me` (401 included)
+as ready.
+
+### 2. Runtime bundle layout (ARTEL-1145 produces, ARTEL-1144 and ARTEL-1146 consume)
+
+Archive: `artel-runtime-<version>-<target>.tar.gz` plus `artel-runtime-<version>-<target>.tar.gz.sha256`
+(hex digest, two spaces, file name). `<target>` is one of `linux-x64`, `linux-arm64`, `darwin-x64`,
+`darwin-arm64`, `win32-x64`, `win32-arm64` (Node's `process.platform-process.arch`). Released on
+`project-artel/artel-desktop` under tag `runtime-v<version>`:
+`https://github.com/project-artel/artel-desktop/releases/download/runtime-v<version>/<archive>`.
+
+The archive unpacks to one directory, the runtime directory:
+
+```
+manifest.json
+postgres/            bin/, lib/, share/ (pgvector's vector.control and SQL files installed into share/extension)
+java/                jlink runtime
+orchestration/orchestration.jar
+python/              python-build-standalone with the agent-server dependencies installed into its site-packages
+agent-server/app/    agent-server source, run from agent-server/
+home/                artel-home dist built with VITE_ORCHESTRATION_URL=__ARTEL_ORCHESTRATION_URL__
+```
+
+`manifest.json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "version": "0.1.0",
+  "target": "linux-x64",
+  "executables": {
+    "postgres": "postgres/bin/postgres",
+    "initdb": "postgres/bin/initdb",
+    "pg_ctl": "postgres/bin/pg_ctl",
+    "pg_isready": "postgres/bin/pg_isready",
+    "createdb": "postgres/bin/createdb",
+    "java": "java/bin/java",
+    "python": "python/bin/python3"
+  },
+  "orchestrationJar": "orchestration/orchestration.jar",
+  "agentServerDir": "agent-server",
+  "homeDir": "home",
+  "components": { "postgres": "16.x", "pgvector": "0.8.x", "java": "21.x", "python": "3.12.x" },
+  "sources": { "orchestration": "<git sha>", "agentServer": "<git sha>", "home": "<git sha>" }
+}
+```
+
+Paths are relative to the runtime directory, with `/` separators, and carry `.exe` on Windows
+(`python/python.exe` there). Consumers read paths only from the manifest and never build them per OS.
+
+### 3. Supervisor module (ARTEL-1144 exports, ARTEL-1146 imports)
+
+`@project-artel/cli` adds the package export `"./supervisor"`. Electron imports it; it must not import commander
+or write to stdout.
+
+```ts
+export type ServiceName = 'postgres' | 'orchestration' | 'agent-server' | 'proxy';
+export type ServiceState = 'stopped' | 'starting' | 'ready' | 'crashed';
+
+export interface SupervisorOptions {
+  runtimeDir?: string;   // default: ARTEL_RUNTIME_DIR, then <dataDir>/runtime/<version>
+  dataDir?: string;      // default: defaultDataDir()
+  host?: string;         // default 127.0.0.1
+  port?: number;         // proxy port; default: saved in config.json, first start tries 8088 then a free port
+  publicUrl?: string;    // default http://<host>:<port>
+  onEvent?: (event: SupervisorEvent) => void;
+}
+
+export type SupervisorEvent =
+  | { type: 'service'; service: ServiceName; state: ServiceState; detail?: string }
+  | { type: 'log'; service: ServiceName; line: string }
+  | { type: 'ready'; url: string };
+
+export interface RunningStack { url: string; attached: boolean; stop(): Promise<void>; }
+export interface StackStatus {
+  running: boolean; url?: string; pid?: number;
+  services: Record<ServiceName, ServiceState>;
+}
+
+export function defaultDataDir(): string;
+export function startStack(options?: SupervisorOptions): Promise<RunningStack>;
+export function stopStack(options?: Pick<SupervisorOptions, 'dataDir'>): Promise<void>;
+export function stackStatus(options?: Pick<SupervisorOptions, 'dataDir'>): Promise<StackStatus>;
+export function logDir(options?: Pick<SupervisorOptions, 'dataDir'>): string;
+```
+
+- `startStack` returns `{ attached: true }` without starting anything when `state.json` names a live
+  supervisor whose proxy answers. `stop()` on an attached handle does nothing; `stopStack` stops it.
+- Data directory: `$XDG_DATA_HOME/artel` or `~/.local/share/artel`, `~/Library/Application Support/ARTEL`,
+  `%LOCALAPPDATA%\ARTEL`. Files: `config.json` (mode 0600: secrets, ports), `state.json`, `pgdata/`,
+  `storage/`, `home/` (dist with the placeholder replaced), `logs/<service>.log`, `runtime/<version>/`.
+- Proxy: `/api/*`, `/oauth2/*`, `/login/oauth2/*`, `/ws/*` go to orchestration with WebSocket upgrade and no
+  response buffering; everything else is served from `home/`, falling back to `index.html`.
+
+### 4. CLI inside the desktop app (ARTEL-1146 ships, ARTEL-1144 honours)
+
+The desktop app ships `bin/artel` and `bin/artel.cmd`, which run
+`ELECTRON_RUN_AS_NODE=1 <app executable> <unpacked cli.js>` with `ARTEL_RUNTIME_DIR=<resources>/runtime`.
+When `ARTEL_RUNTIME_DIR` is set, no `--api-url`, `ARTEL_API_BASE_URL` or credentials-file URL is given, and a
+local stack is running, the CLI uses the local stack's URL as both the API and the console base URL.
