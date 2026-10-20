@@ -90,6 +90,9 @@ artel (CLI, Node)                       ARTEL Desktop (Electron)
 - **Headless install.** `npm i -g @project-artel/cli`, then `artel server install` downloads the runtime
   bundle that matches the CLI version from GitHub Releases and checks its SHA-256. The bundle is not put
   in the npm package, which would make every CLI user download it.
+  Decided 2026-10-20: `artel server start` runs the same install step itself when the runtime is missing, so
+  `npm i -g` then `artel server start` is enough. `--no-install` turns that off. It never downloads when
+  `ARTEL_RUNTIME_DIR` is set (the desktop app's bundled runtime).
 - **Desktop app.** New repository `project-artel/artel-desktop`, public and AGPL-3.0-only like the other
   repositories, added to this workspace as a submodule on branch `main`. It holds both the runtime bundle
   build and the Electron app. `electron-builder` puts the runtime bundle in
