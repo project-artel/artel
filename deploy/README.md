@@ -38,6 +38,11 @@ An existing `docker-compose.yml` is never overwritten, so running the script aga
 When it finishes, open `http://localhost:8088`. **The first account to sign up becomes the admin.**
 Signed in as that account, open `http://localhost:8088/admin/settings` (the "관리" / "Admin" link in the top bar, then the Settings tab) and enter the OpenRouter key, and optionally the Bedrock key and the Claude API key (Anthropic). They are stored encrypted in the database.
 
+## 사용 통계
+
+admin 이 `/admin` 에 처음 들어가면 ARTEL 개선을 위해 사용 통계를 보낼지 묻는다. 보내기로 하면 하루에 한 번 QA run 결과와 LLM 사용량의 합계를 `ARTEL_TELEMETRY_URL` 로 보낸다. 게임 내용과 개인 정보는 보내지 않는다.
+보내는 항목은 그 창과 `/admin/settings` 에서 볼 수 있고, 설정은 `/admin/settings` 에서 바꾼다. `ARTEL_TELEMETRY_URL` 을 비우면 묻지도 보내지도 않는다.
+
 ## Addresses and ports
 
 | What | Where |

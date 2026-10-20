@@ -129,6 +129,8 @@ services:
       ARTEL_SECURE_COOKIE: "false"
       # The first account to sign up becomes the admin. After that, public signup is closed unless true.
       ARTEL_SIGNUP_OPEN: "false"
+      # Usage statistics go here once a day, only after an admin agrees on the first visit to /admin. Blank: never asked, never sent.
+      ARTEL_TELEMETRY_URL: https://stage-orch.artel.kr/telemetry/reports
       # With false, a GitHub account signs in only when an admin created a user with the same email.
       ARTEL_GITHUB_SIGNUP_OPEN: "false"
       # Login rate limit: failures per email or per client address inside the window before a 429.
