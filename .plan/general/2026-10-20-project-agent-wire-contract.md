@@ -295,3 +295,24 @@ The catalog is static TypeScript in artel-home, sent with `POST /` and with ever
 | ARTEL-1128 | home | `src/projectAgent/registry/**`, `AgentHighlight`, provider wiring in `ProjectWorkspace` |
 | ARTEL-1129 | home | `src/projectAgent/chat/**`, tool executor, queries, `AgentChatPanel` |
 | ARTEL-1130 | home | page bindings in `qa/`, `contentMap/`, `testRuns/`, the catalog entries, `watch_job`, `author_scenarios` |
+
+## 6. What the implementation changed (2026-10-20)
+
+Recorded after ARTEL-1126 to 1130 were built and run end to end against a real model.
+
+- 409 bodies use orchestration's common error shape `{code, message, fields}`
+  (`{code: "conversation_busy"}`, `{code: "not_pending"}`), not `{error}`; `error-handling.md`
+  forbids a new handler. The browser only checks the status.
+- `POST cancel` while `RUNNING` cancels the step coroutine and drops a result that arrives late.
+  A tool result that arrives while the conversation is not `AWAITING_TOOL` is `not_pending`.
+- Orchestration settings: `artel.project-agent.step-timeout` (120 s), `heartbeat-interval` (15 s),
+  `tool-call-limit` (30). Tool calls returned while `tools_enabled` is false are dropped.
+- agent-server maps missing Claude / GPT keys to 502 as well, and adds one prompt rule: read a
+  non-ok tool result's reason and do not repeat the same call with the same arguments.
+- `JobKind` gained `author_scenarios` for the RunChat progress card.
+- `query qa_history` reads `GET /api/projects/:id/qa-runs`; on a 404 (orchestration without
+  that endpoint yet) it falls back to `GET /api/qa-tries` grouped by QA run.
+- QA run fields and `qa.startRun` live on `src/qa/launch/{QaLaunch,LaunchPanel}.tsx`, since
+  `QaTryPanel` was replaced on `develop`. `contentMap.overwriteTestCases` is registered on
+  `EvidenceScanPanel` and highlights its "scan and generate" button, because the map page has no
+  overwrite button of its own.
