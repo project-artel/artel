@@ -34,7 +34,7 @@ The compose stack has 7 services. What each one needs to run natively:
 | Service | Today | Native plan | Why |
 | --- | --- | --- | --- |
 | postgres | `pgvector/pgvector:pg16` | PostgreSQL 16 binaries per OS plus pgvector built in our CI | Flyway runs `CREATE EXTENSION vector` (V18, V23, V102 use `vector(1024)`) |
-| valkey | `valkey/valkey` | **Removed** in bundled mode | Valkey has no native Windows build |
+| valkey | `valkey/valkey` | **Removed** in bundled mode | Valkey has no native Windows build. Decided 2026-10-20 not to bundle it on macOS and Linux either: Redis held only five-minute SDK login codes and GitHub installation choices, `ARTEL_STORE=postgres` covers both, and one more process costs memory and start-up time on every OS |
 | minio | Chainguard image | **Removed** in bundled mode | MinIO stopped shipping community binaries |
 | orchestration | Spring Boot jar, Java 21 | Fat jar plus a `jlink` runtime per OS | |
 | agent-server | Python, FastAPI | `python-build-standalone` plus a pre-built virtual environment per OS | Wheels such as `pdfplumber` and `uvloop` are native |
