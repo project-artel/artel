@@ -1,7 +1,3 @@
-[submodule "admin-page"]
-	path = admin-page
-	url = https://github.com/project-artel/admin-page
-	branch = main
 [submodule "artel-agent-server"]
 	path = artel-agent-server
 	url = https://github.com/project-artel/artel-agent-server.git
