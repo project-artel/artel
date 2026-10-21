@@ -3,6 +3,25 @@
 > Product direction: **A — Replay Studio**  
 > Scope: The React interface used to observe Unity game QA sessions and reconstruct an AI agent's actions, decisions, and failures.
 
+## Scope and local design rules
+
+Apply the Replay Studio visual direction, tokens, shell, components, and
+completion criteria below only to interfaces for observing and replaying QA
+sessions. Reading this file for a React change does not make those visual rules
+universal across ARTEL.
+
+For other surfaces, follow the component's local design instructions and reuse
+its existing tokens, typography, shared layout, and theme behavior. For the
+onboarding site, follow [Onboarding design rules](../../onboarding/.agents/docs/DESIGN.md).
+Do not copy Replay Studio's graphite palette, cyan accent, or dark-first behavior
+into marketing, installation guides, or reference documentation.
+
+Before changing a UI, inspect its shared layout, token definitions, theme switch,
+and neighboring pages. A request to resemble another category of interface
+(such as language reference documentation) changes information architecture and
+navigation by default; retain the host site's visual identity unless the user
+explicitly asks to change it.
+
 ## Product principles
 
 1. **Replay first** — Game footage is the primary workspace. Every event must align to the same timeline.
