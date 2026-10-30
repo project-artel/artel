@@ -2,3 +2,4 @@
 .notion.env
 .worktrees/
 /.work/
+/.captures/
