@@ -127,8 +127,8 @@ services:
       ARTEL_SECRETS_KEY: *secrets_key
       # Set to true only when the public URL is https, so cookies are sent over TLS only.
       ARTEL_SECURE_COOKIE: "false"
-      # The first account to sign up becomes the admin. After that, public signup is closed unless true.
-      ARTEL_SIGNUP_OPEN: "false"
+      # 첫 가입자는 ADMIN 이 된다. 첫 가입만 허용하려면 false 로 설정한다.
+      ARTEL_SIGNUP_OPEN: "true"
       # Usage statistics go here once a day, only after an admin agrees on the first visit to /admin. Blank: never asked, never sent.
       ARTEL_TELEMETRY_URL: https://stage-orch.artel.kr/telemetry/reports
       # With false, a GitHub account signs in only when an admin created a user with the same email.

@@ -40,3 +40,18 @@ Two audiences, two languages. The directory settles which one a file is.
 - Before reading from or writing to the ARTEL Notion workspace, read [`.agents/docs/NOTION.md`](.agents/docs/NOTION.md) and follow it.
 - Credentials live in the gitignored `.notion.env`. Load them with `set -a && . ./.notion.env && set +a`. Never run `ntn login`, and never print the token.
 - Its `## 8. Write policy` section governs what an agent may create on its own, what needs a human's approval first, and what is never written.
+
+## Code Review Rules
+
+- Write all code review titles, descriptions, comments, and summaries in Korean.
+- Preserve code identifiers, file paths, commands, error messages, and technical terms in their original form.
+- For each finding, concisely explain the cause, impact, and suggested fix.
+
+## Writing Style
+
+Follow [`.agents/docs/writing-style.md`](.agents/docs/writing-style.md) for chat
+replies, reviews, plans, handoffs, issues, commit titles and bodies, pull
+requests, release notes, source comments, and all frontend copy (including
+localization, errors, labels, and accessibility text).
+Its wording and title rules take precedence over older style examples;
+preserve project-specific technical constraints and workflows.

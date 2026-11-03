@@ -300,7 +300,7 @@ FROM test_scenario s CROSS JOIN LATERAL jsonb_array_elements(s.steps) st
 WHERE s.project_id = <p> GROUP BY s.id, s.steps ORDER BY s.id;
 ```
 
-L1 must be 24 steps / 6 expect-fail, L2 9 / 0, L3 14 / 2, probe 9 / 1.
+L1 must be 24 steps / 5 expect-fail, L2 9 / 0, L3 14 / 2, probe 9 / 1.
 
 ## Running the arms
 

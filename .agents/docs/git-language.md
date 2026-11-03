@@ -18,38 +18,18 @@ bodies as well.
 
 ## Titles
 
-A title is a label for the thing that changed, not a claim about it. This
-covers commit subjects, pull request titles, and Jira 에픽 · 스토리 · 작업
-summaries.
+Follow the title rules in [writing-style.md](writing-style.md). Name the affected
+thing and the change, and give the number when it matters. End Korean work-item
+titles with a noun such as `추가`, `수정`, `적용`, or `이동`, not `~한다`.
+This applies to commit subjects, pull request titles, Jira summaries, and
+headings in documents or decks. Keep the Conventional Commit type in English.
 
-**Name the changed thing and say what happened to it.** The subject is
-something a reader can grep for — a file, a module, a table, an endpoint, a
-tool, a field. The verb is an edit: 추가한다, 옮긴다, 지운다, 고친다, 나눈다.
-Give the number when there is one: `재시도 3회로 제한한다` beats
-`재시도를 줄인다`.
+- Epic: `QA run 결과 재생 지원`
+- Story: `QA agent context에 pulse 추가`
+- Task: `SceneMemory에 pulse 프레임 누적`
 
-**A title that states an insight is not a title.** `런은 agent 가 물어봐서
-나아간다` reads well and cannot be checked — a reviewer holding the diff has no
-way to say whether it is true, because it describes a design idea rather than
-an edit. The same sentence as a label is
-`QA 런에 tool 호출 상한과 벽시계 마감을 둔다`. Aphorisms, figures of speech, and
-rhetorical questions all fail the same way. If it reads like a slide headline,
-rewrite it.
-
-| 나쁨 | 좋음 |
-| --- | --- |
-| `fix(qa): 런은 agent 가 물어봐서 나아간다` | `fix(qa): QA 런에 tool 호출 상한과 벽시계 마감을 둔다` |
-| `refactor: 구조를 데이터로` | `refactor(qa): loop 상한과 vision 여부를 QaArchSpec 필드로 옮긴다` |
-| `feat: 지식은 두 번 모델을 거친다` | `feat(knowledge): knowledge 항목마다 검색용 질문을 생성해 색인한다` |
-| `docs: 이 발표의 문장은 코드 옆에 있다` | `docs: agent 파이프라인 문서에 원문 파일 경로 표를 넣는다` |
-
-Jira levels differ only in what they name. An 에픽 names the outcome, a 스토리
-names the behavior that changes, and a 작업 names what that one repository does
-about it. None of the three is a place for a thesis.
-
-This rule reaches the headings inside a document or a deck as well. A section
-heading tells the reader what is in that section; it is not the place to make
-the section's point.
+Avoid aphorisms, rhetorical questions, and metaphors. Prefer
+`fix(qa): QA run 재시도 3회로 제한` to an abstract claim about stability.
 
 ## Word Choice
 
