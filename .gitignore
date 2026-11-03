@@ -2,4 +2,6 @@
 .notion.env
 .worktrees/
 /.work/
+.dev/branches/
+.dev/local.env
 /.captures/
