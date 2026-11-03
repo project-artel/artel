@@ -85,9 +85,12 @@ Every setting is in `docker-compose.yml`. The `x-` block at the top holds the va
 - `x-bedrock-region`: AWS region for `bedrock/...` models. Default `us-west-2`.
 - LLM provider keys are not environment variables and `OPENROUTER_API_KEY`, `LLM_API_KEY` and `BEDROCK_API_KEY` are no longer read. After the stack is up, sign in as the first account and enter the OpenRouter key, and optionally the Bedrock key and the Claude API key (Anthropic), at `<public URL>/admin/settings`. The `claude/...` models start switched off and are switched on after the check for the Claude API key on that page passes. Without a stored Bedrock key the agent server uses the standard AWS credential chain (for example an IAM role).
 
-Settings you rarely change are plain values under each service's `environment:`: `ARTEL_SIGNUP_OPEN` (public signup after the first account, default `false`),
-`ARTEL_GITHUB_SIGNUP_OPEN`, `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (the GitHub login button is hidden unless both are set; callback URL `<public URL>/login/oauth2/code/github`),
-`ARTEL_SECURE_COOKIE`, the login rate limits, and the `image:` lines.
+자주 바꾸지 않는 설정은 각 service 의 `environment:` 에서 지정한다. `ARTEL_SIGNUP_OPEN` 은 기본값이
+`true` 로 이메일·비밀번호 공개 가입을 허용한다. 첫 가입만 허용하려면 `false` 로 설정한다.
+그 밖에 `ARTEL_GITHUB_SIGNUP_OPEN`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`,
+`ARTEL_SECURE_COOKIE`, 로그인 횟수 제한과 `image:` 도 여기서 설정한다. GitHub 로그인 버튼은
+`GITHUB_CLIENT_ID` 와 `GITHUB_CLIENT_SECRET` 을 모두 설정해야 표시되며,
+callback URL 은 `<public URL>/login/oauth2/code/github` 이다.
 The orchestration service also sets `LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB` and `..._REACTIVE` to `INFO`; the server's own default is `DEBUG`, which logs a line for every request.
 
 The published ports and the Caddy site addresses are literals, and the Caddy text cannot read the `x-` values. To change the port or serve from a host name, edit these together:
