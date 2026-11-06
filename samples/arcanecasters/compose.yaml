@@ -1,0 +1,140 @@
+name: arcanecasters-qa
+
+x-app-healthcheck: &app-healthcheck
+  test:
+    - CMD
+    - bash
+    - -ec
+    - |
+      exec 3<>/dev/tcp/127.0.0.1/8081
+      printf 'GET /actuator/health HTTP/1.0\r\n\r\n' >&3
+      grep -q '"status":"UP"' <&3
+  interval: 3s
+  timeout: 3s
+  start_period: 20s
+  retries: 20
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: game
+      POSTGRES_USER: qa
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./qa/init-account.sql:/docker-entrypoint-initdb.d/init-account.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U qa -d game"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    image: flyway/flyway:11
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/game
+      FLYWAY_USER: qa
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD:?}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_MIXED: "true"
+    volumes:
+      - type: bind
+        source: ${GAME_MIGRATIONS:?}
+        target: /flyway/sql
+        read_only: true
+        bind:
+          create_host_path: false
+    command: migrate
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  account:
+    image: ${ACCOUNT_IMAGE:?}
+    healthcheck: *app-healthcheck
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:${ACCOUNT_PORT}:8080"
+    environment:
+      PORT: "8080"
+      PROTOCOL: http
+      DOMAIN: 127.0.0.1
+      EXTERNAL_PORT: ${ACCOUNT_PORT}
+      ACCOUNT_DATABASE_URL: r2dbc:postgresql://postgres:5432/account
+      ACCOUNT_DATABASE_USERNAME: qa
+      ACCOUNT_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?}
+      GAME_DATABASE_URL: r2dbc:postgresql://postgres:5432/game
+      GAME_DATABASE_USERNAME: qa
+      GAME_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?}
+      JWT_PRIVATE_KEY: file:/run/qa/private.pem
+      JWT_PUBLIC_KEY: file:/run/qa/public.pem
+    volumes:
+      - ./.qa/private.pem:/run/qa/private.pem:ro
+      - ./.qa/public.pem:/run/qa/public.pem:ro
+
+  lobby:
+    build: ./arcanecasters-lobby
+    healthcheck: *app-healthcheck
+    depends_on:
+      account:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${LOBBY_PORT}:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: r2dbc:postgresql://postgres:5432/game
+      DATABASE_USERNAME: qa
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?}
+      REDIS_HOST: redis
+      ACCOUNT_SERVER_URL: http://account:8080
+      JWT_FILE_PATH: /run/qa/service.jwt
+      SPRING_PROFILES_ACTIVE: qa
+      ARTEL_QA_ENABLED: "true"
+      ARTEL_QA_ACCOUNTS: ${QA_ACCOUNTS}
+      ARTEL_QA_GAME_URL: http://game:7777
+      PLAYGROUND_ENABLED: "false"
+    volumes:
+      - ./.qa/service.jwt:/run/qa/service.jwt:ro
+
+  game:
+    build: ./arcanecasters-game
+    healthcheck: *app-healthcheck
+    depends_on:
+      account:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${GAME_PORT}:7777"
+    environment:
+      PORT: "7777"
+      EXTERNAL_PORT: ${GAME_PORT}
+      PROTOCOL: http
+      DOMAIN: 127.0.0.1
+      INTERNAL_BASE_URL: http://game:7777
+      DATABASE_URL: jdbc:postgresql://postgres:5432/game
+      DATABASE_USER: qa
+      DATABASE_PW: ${POSTGRES_PASSWORD:?}
+      ACCOUNT_SERVER_URL: http://account:8080
+      SPRING_PROFILES_ACTIVE: qa
+      ARTEL_QA_ENABLED: "true"
+      ARTEL_QA_ACCOUNTS: ${QA_ACCOUNTS}
+      ARTEL_QA_BOT_ID: ${QA_BOT_ID}
+      BOT_AUTO_MATCH_ENABLED: "false"
+      PLAYGROUND_ENABLED: "false"
+      DISCORD_WEBHOOK_URL: ""
+      ALERT_ENABLED: "false"
+
+volumes:
+  postgres:

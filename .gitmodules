@@ -38,3 +38,15 @@
 	path = artel-skills
 	url = https://github.com/project-artel/artel-skills.git
 	branch = main
+[submodule "samples/arcanecasters/arcanecasters-client"]
+	path = samples/arcanecasters/arcanecasters-client
+	url = https://github.com/project-artel/arcanecasters-client.git
+	branch = dev
+[submodule "samples/arcanecasters/arcanecasters-lobby"]
+	path = samples/arcanecasters/arcanecasters-lobby
+	url = https://github.com/project-artel/arcanecasters-lobby.git
+	branch = dev
+[submodule "samples/arcanecasters/arcanecasters-game"]
+	path = samples/arcanecasters/arcanecasters-game
+	url = https://github.com/project-artel/arcanecasters-game.git
+	branch = dev
