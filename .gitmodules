@@ -27,7 +27,7 @@
 	url = https://github.com/project-artel/onboarding
 	branch = main
 [submodule ".github"]
-	path = .github
+	path = github-profile
 	url = https://github.com/project-artel/.github.git
 	branch = main
 [submodule "artel-desktop"]
