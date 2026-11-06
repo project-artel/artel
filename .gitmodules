@@ -50,3 +50,18 @@
 	path = samples/arcanecasters/arcanecasters-game
 	url = https://github.com/project-artel/arcanecasters-game.git
 	branch = dev
+[submodule "samples/match3-unity"]
+	path = samples/match3-unity
+	url = https://github.com/project-artel/match3-unity.git
+	branch = main
+[submodule "samples/survivors-roguelike-kit"]
+	path = samples/survivors-roguelike-kit
+	url = https://github.com/project-artel/survivors-roguelike-kit.git
+	branch = main
+[submodule "samples/living-dead-fps-3d-shooting-game"]
+	path = samples/living-dead-fps-3d-shooting-game
+	url = https://github.com/project-artel/living-dead-fps-3d-shooting-game.git
+	branch = master
+[submodule "samples/word-venture"]
+	path = samples/word-venture
+	url = https://github.com/project-artel/word-venture.git
