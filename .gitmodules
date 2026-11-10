@@ -65,3 +65,7 @@
 [submodule "samples/word-venture"]
 	path = samples/word-venture
 	url = https://github.com/project-artel/word-venture.git
+[submodule "artel-mcp"]
+	path = artel-mcp
+	url = https://github.com/project-artel/artel-macro-mcp.git
+	branch = develop
