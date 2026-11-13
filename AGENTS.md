@@ -1,5 +1,12 @@
 # ARTEL Agent Instructions
 
+## Nested repositories
+
+Before working in a submodule, nested repository, or its worktree, read that
+checkout's `AGENTS.md` and follow the instructions it references. Repeat this
+for every affected repository, even when the session starts at the ARTEL root.
+Read any applicable `AGENTS.md` files under the paths you will change.
+
 ## Documentation language
 
 Two audiences, two languages. The directory settles which one a file is.
@@ -29,6 +36,11 @@ Two audiences, two languages. The directory settles which one a file is.
 
 - Before designing or changing React UI, Replay Studio, QA timeline, evidence, or agent-status interfaces, read `.agents/docs/DESIGN.md` and follow it.
 - Unless a task explicitly requires otherwise, use its semantic tokens, layouts, components, states, and accessibility rules as the project defaults.
+
+## Development and pull request completion
+
+Follow [`.agents/docs/workflow.md`](.agents/docs/workflow.md) for development
+that produces a pull request, including required CI verification.
 
 ## User-facing copy
 
