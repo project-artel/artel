@@ -65,3 +65,7 @@
 	path = artel-mcp
 	url = https://github.com/project-artel/artel-macro-mcp.git
 	branch = develop
+[submodule "qa-action"]
+	path = qa-action
+	url = https://github.com/project-artel/qa-action.git
+	branch = main
