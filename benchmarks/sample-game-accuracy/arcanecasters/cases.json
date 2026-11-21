@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10401,
+    "scene": "LoginScene",
+    "step": "유효한 QA 계정으로 로그인한다",
+    "precondition": "로컬 QA Account와 Lobby가 준비됐고 로그인 화면에 있다",
+    "expectedValue": "로비가 표시된다"
+  },
+  {
+    "tc": 10402,
+    "scene": "LoginScene",
+    "step": "QA 이메일과 틀린 비밀번호로 로그인을 시도한다",
+    "precondition": "로그인 화면이고 QA 계정 이메일을 알고 있다",
+    "expectedValue": "로비가 표시된다"
+  },
+  {
+    "tc": 10403,
+    "scene": "LoginScene",
+    "step": "회원가입 버튼을 누른다",
+    "precondition": "로그인 화면",
+    "expectedValue": "회원가입 입력 화면이 열린다"
+  },
+  {
+    "tc": 10404,
+    "scene": "RegisterScene",
+    "step": "로그인 화면으로 돌아가는 버튼을 누른다",
+    "precondition": "회원가입 화면",
+    "expectedValue": "로비가 표시된다"
+  },
+  {
+    "tc": 10405,
+    "scene": "LobbyScene",
+    "step": "덱 관리 메뉴를 누른다",
+    "precondition": "초기 온보딩을 마친 QA 계정의 로비",
+    "expectedValue": "보유 카드와 덱을 관리하는 화면이 열린다"
+  },
+  {
+    "tc": 10406,
+    "scene": "LobbyScene",
+    "step": "마법 도감 메뉴를 누른다",
+    "precondition": "초기 온보딩을 마친 QA 계정의 로비",
+    "expectedValue": "회원가입 입력 폼이 표시된다"
+  },
+  {
+    "tc": 10407,
+    "scene": "MagicBookScene",
+    "step": "목록에서 마법 하나를 선택한다",
+    "precondition": "마법 도감에 마법 항목이 표시되어 있다",
+    "expectedValue": "선택한 마법의 정보가 표시된다"
+  },
+  {
+    "tc": 10408,
+    "scene": "LobbyScene",
+    "step": "자기 프로필을 연다",
+    "precondition": "초기 온보딩을 마친 QA 계정의 로비",
+    "expectedValue": "마법 도감이 표시된다"
+  },
+  {
+    "tc": 10409,
+    "scene": "LobbyScene",
+    "step": "모험 메뉴를 누른다",
+    "precondition": "초기 온보딩을 마친 QA 계정의 로비",
+    "expectedValue": "모험 목록이 표시된다"
+  },
+  {
+    "tc": 10410,
+    "scene": "ResultScene",
+    "step": "로비 복귀 버튼을 누른다",
+    "precondition": "QA 계정으로 전투를 끝내고 결과 화면의 로비 복귀 버튼이 표시된다",
+    "expectedValue": "회원가입 화면이 표시된다"
+  },
+  {
+    "tc": 10411,
+    "scene": "RegisterScene",
+    "step": "로그인 화면으로 돌아가는 버튼을 누른다",
+    "precondition": "회원가입 화면",
+    "expectedValue": "로그인 입력 화면이 다시 표시된다"
+  },
+  {
+    "tc": 10412,
+    "scene": "LobbyScene",
+    "step": "덱 관리 메뉴를 누른다",
+    "precondition": "초기 온보딩을 마친 QA 계정의 로비",
+    "expectedValue": "상자 보상을 여는 화면이 열린다"
+  },
+  {
+    "tc": 10413,
+    "scene": "LobbyScene",
+    "step": "마법 도감 메뉴를 누른다",
+    "precondition": "초기 온보딩을 마친 QA 계정의 로비",
+    "expectedValue": "마법 목록이 표시된다"
+  },
+  {
+    "tc": 10414,
+    "scene": "MagicBookScene",
+    "step": "목록에서 마법 하나를 선택한다",
+    "precondition": "마법 도감에 마법 항목이 표시되어 있다",
+    "expectedValue": "PvP 상대 찾기가 시작된다"
+  },
+  {
+    "tc": 10415,
+    "scene": "LobbyScene",
+    "step": "자기 프로필을 연다",
+    "precondition": "초기 온보딩을 마친 QA 계정의 로비",
+    "expectedValue": "현재 계정의 프로필이 표시된다"
+  },
+  {
+    "tc": 10416,
+    "scene": "LobbyScene",
+    "step": "모험 메뉴를 누른다",
+    "precondition": "초기 온보딩을 마친 QA 계정의 로비",
+    "expectedValue": "회원가입 화면이 표시된다"
+  },
+  {
+    "tc": 10417,
+    "scene": "ResultScene",
+    "step": "로비 복귀 버튼을 누른다",
+    "precondition": "QA 계정으로 전투를 끝내고 결과 화면의 로비 복귀 버튼이 표시된다",
+    "expectedValue": "로비가 표시된다"
+  },
+  {
+    "tc": 10418,
+    "scene": "LoginScene",
+    "step": "유효한 QA 계정으로 로그인한다",
+    "precondition": "로컬 QA Account와 Lobby가 준비됐고 로그인 화면에 있다",
+    "expectedValue": "게임 결과 화면이 표시된다"
+  },
+  {
+    "tc": 10419,
+    "scene": "LoginScene",
+    "step": "QA 이메일과 틀린 비밀번호로 로그인을 시도한다",
+    "precondition": "로그인 화면이고 QA 계정 이메일을 알고 있다",
+    "expectedValue": "로그인 화면에서 실패가 표시된다"
+  },
+  {
+    "tc": 10420,
+    "scene": "LoginScene",
+    "step": "회원가입 버튼을 누른다",
+    "precondition": "로그인 화면",
+    "expectedValue": "덱 관리 화면이 열린다"
+  }
+]

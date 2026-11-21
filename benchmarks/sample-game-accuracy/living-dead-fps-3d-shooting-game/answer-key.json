@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10301,
+    "expected_passed": true,
+    "pair": "일반 모드",
+    "observation": "일반 모드 맵이 열린다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/mode_menu.cs"
+  },
+  {
+    "tc": 10302,
+    "expected_passed": false,
+    "pair": "좀비 모드",
+    "observation": "좀비 모드 맵이 열린다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/mode_menu.cs"
+  },
+  {
+    "tc": 10303,
+    "expected_passed": true,
+    "pair": "일시 정지",
+    "observation": "일시 정지 메뉴가 표시된다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/pause_menu_script.cs"
+  },
+  {
+    "tc": 10304,
+    "expected_passed": false,
+    "pair": "재개",
+    "observation": "일시 정지 메뉴가 닫힌다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/pause_menu_script.cs"
+  },
+  {
+    "tc": 10305,
+    "expected_passed": true,
+    "pair": "메뉴 복귀",
+    "observation": "메인 메뉴로 돌아간다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/pause_menu_script.cs"
+  },
+  {
+    "tc": 10306,
+    "expected_passed": false,
+    "pair": "시간 진행",
+    "observation": "표시된 남은 시간이 감소한다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/time_manager.cs"
+  },
+  {
+    "tc": 10307,
+    "expected_passed": true,
+    "pair": "정지 중 시간",
+    "observation": "정지 중 타이머가 유지된다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/pause_menu_script.cs"
+  },
+  {
+    "tc": 10308,
+    "expected_passed": false,
+    "pair": "무기 교체",
+    "observation": "화면에 든 무기가 바뀐다",
+    "source": "samples/living-dead-fps-3d-shooting-game/README.md"
+  },
+  {
+    "tc": 10309,
+    "expected_passed": true,
+    "pair": "피격",
+    "observation": "체력 표시가 감소한다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/player_health.cs"
+  },
+  {
+    "tc": 10310,
+    "expected_passed": false,
+    "pair": "처치 수",
+    "observation": "처치 수가 1 증가한다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/score_kill.cs"
+  },
+  {
+    "tc": 10311,
+    "expected_passed": true,
+    "pair": "재개",
+    "observation": "일시 정지 메뉴가 닫힌다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/pause_menu_script.cs"
+  },
+  {
+    "tc": 10312,
+    "expected_passed": false,
+    "pair": "메뉴 복귀",
+    "observation": "메인 메뉴로 돌아간다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/pause_menu_script.cs"
+  },
+  {
+    "tc": 10313,
+    "expected_passed": true,
+    "pair": "시간 진행",
+    "observation": "표시된 남은 시간이 감소한다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/time_manager.cs"
+  },
+  {
+    "tc": 10314,
+    "expected_passed": false,
+    "pair": "정지 중 시간",
+    "observation": "정지 중 타이머가 유지된다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/pause_menu_script.cs"
+  },
+  {
+    "tc": 10315,
+    "expected_passed": true,
+    "pair": "무기 교체",
+    "observation": "화면에 든 무기가 바뀐다",
+    "source": "samples/living-dead-fps-3d-shooting-game/README.md"
+  },
+  {
+    "tc": 10316,
+    "expected_passed": false,
+    "pair": "피격",
+    "observation": "체력 표시가 감소한다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/player_health.cs"
+  },
+  {
+    "tc": 10317,
+    "expected_passed": true,
+    "pair": "처치 수",
+    "observation": "처치 수가 1 증가한다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/score_kill.cs"
+  },
+  {
+    "tc": 10318,
+    "expected_passed": false,
+    "pair": "일반 모드",
+    "observation": "일반 모드 맵이 열린다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/mode_menu.cs"
+  },
+  {
+    "tc": 10319,
+    "expected_passed": true,
+    "pair": "좀비 모드",
+    "observation": "좀비 모드 맵이 열린다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/mode_menu.cs"
+  },
+  {
+    "tc": 10320,
+    "expected_passed": false,
+    "pair": "일시 정지",
+    "observation": "일시 정지 메뉴가 표시된다",
+    "source": "samples/living-dead-fps-3d-shooting-game/Assets/game scripts/pause_menu_script.cs"
+  }
+]

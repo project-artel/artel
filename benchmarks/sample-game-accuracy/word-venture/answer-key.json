@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10001,
+    "expected_passed": true,
+    "pair": "타이틀",
+    "observation": "오프닝 대사가 표시된다",
+    "source": "samples/word-venture/Assets/Scripts/Scenes/TitleSceneManager.cs"
+  },
+  {
+    "tc": 10002,
+    "expected_passed": false,
+    "pair": "오프닝",
+    "observation": "맵 화면이 표시된다",
+    "source": "samples/word-venture/Assets/Scripts/Story/StoryController.cs"
+  },
+  {
+    "tc": 10003,
+    "expected_passed": true,
+    "pair": "맵",
+    "observation": "전투 화면이 표시된다",
+    "source": "samples/word-venture/Assets/Scripts/Map/MapMove.cs"
+  },
+  {
+    "tc": 10004,
+    "expected_passed": false,
+    "pair": "첫 전투",
+    "observation": "튜토리얼 대사가 표시된다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/TutorialPlayTests.cs"
+  },
+  {
+    "tc": 10005,
+    "expected_passed": true,
+    "pair": "조합 열기",
+    "observation": "카드를 넣는 조합 슬롯이 표시된다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/TutorialPlayTests.cs"
+  },
+  {
+    "tc": 10006,
+    "expected_passed": false,
+    "pair": "조합 준비",
+    "observation": "발동 버튼을 사용할 수 있다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/TutorialPlayTests.cs"
+  },
+  {
+    "tc": 10007,
+    "expected_passed": true,
+    "pair": "대상 선택",
+    "observation": "적을 발동 대상으로 선택할 수 있다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/TutorialPlayTests.cs"
+  },
+  {
+    "tc": 10008,
+    "expected_passed": false,
+    "pair": "설정 열기",
+    "observation": "설정 패널이 열린다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/SettingsMenuPlayTests.cs"
+  },
+  {
+    "tc": 10009,
+    "expected_passed": true,
+    "pair": "설정 닫기",
+    "observation": "타이틀 메뉴로 돌아온다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/SettingsMenuPlayTests.cs"
+  },
+  {
+    "tc": 10010,
+    "expected_passed": false,
+    "pair": "언어 변경",
+    "observation": "메뉴 문구가 선택한 언어로 바뀐다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/LocalizationPlayTests.cs"
+  },
+  {
+    "tc": 10011,
+    "expected_passed": true,
+    "pair": "첫 전투",
+    "observation": "튜토리얼 대사가 표시된다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/TutorialPlayTests.cs"
+  },
+  {
+    "tc": 10012,
+    "expected_passed": false,
+    "pair": "조합 열기",
+    "observation": "카드를 넣는 조합 슬롯이 표시된다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/TutorialPlayTests.cs"
+  },
+  {
+    "tc": 10013,
+    "expected_passed": true,
+    "pair": "조합 준비",
+    "observation": "발동 버튼을 사용할 수 있다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/TutorialPlayTests.cs"
+  },
+  {
+    "tc": 10014,
+    "expected_passed": false,
+    "pair": "대상 선택",
+    "observation": "적을 발동 대상으로 선택할 수 있다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/TutorialPlayTests.cs"
+  },
+  {
+    "tc": 10015,
+    "expected_passed": true,
+    "pair": "설정 열기",
+    "observation": "설정 패널이 열린다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/SettingsMenuPlayTests.cs"
+  },
+  {
+    "tc": 10016,
+    "expected_passed": false,
+    "pair": "설정 닫기",
+    "observation": "타이틀 메뉴로 돌아온다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/SettingsMenuPlayTests.cs"
+  },
+  {
+    "tc": 10017,
+    "expected_passed": true,
+    "pair": "언어 변경",
+    "observation": "메뉴 문구가 선택한 언어로 바뀐다",
+    "source": "samples/word-venture/Assets/Tests/PlayMode/LocalizationPlayTests.cs"
+  },
+  {
+    "tc": 10018,
+    "expected_passed": false,
+    "pair": "타이틀",
+    "observation": "오프닝 대사가 표시된다",
+    "source": "samples/word-venture/Assets/Scripts/Scenes/TitleSceneManager.cs"
+  },
+  {
+    "tc": 10019,
+    "expected_passed": true,
+    "pair": "오프닝",
+    "observation": "맵 화면이 표시된다",
+    "source": "samples/word-venture/Assets/Scripts/Story/StoryController.cs"
+  },
+  {
+    "tc": 10020,
+    "expected_passed": false,
+    "pair": "맵",
+    "observation": "전투 화면이 표시된다",
+    "source": "samples/word-venture/Assets/Scripts/Map/MapMove.cs"
+  }
+]

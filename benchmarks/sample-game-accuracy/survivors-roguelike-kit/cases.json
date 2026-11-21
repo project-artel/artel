@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10201,
+    "scene": "MainMenu",
+    "step": "New Game을 누른다",
+    "precondition": "메인 메뉴",
+    "expectedValue": "캐릭터 선택 화면이 표시된다"
+  },
+  {
+    "tc": 10202,
+    "scene": "MainMenu",
+    "step": "캐릭터 선택 화면의 닫기 버튼을 누른다",
+    "precondition": "메인 메뉴에서 캐릭터 선택을 열었다",
+    "expectedValue": "레벨 선택 화면이 열린다"
+  },
+  {
+    "tc": 10203,
+    "scene": "MainMenu",
+    "step": "확정 버튼을 누른다",
+    "precondition": "캐릭터 선택에서 사용 가능한 캐릭터가 선택됐다",
+    "expectedValue": "레벨 선택 화면이 열린다"
+  },
+  {
+    "tc": 10204,
+    "scene": "MainMenu",
+    "step": "레벨 선택 화면의 닫기 버튼을 누른다",
+    "precondition": "캐릭터 선택을 확정해 레벨 선택이 열렸다",
+    "expectedValue": "선택한 레벨의 전투가 시작된다"
+  },
+  {
+    "tc": 10205,
+    "scene": "MainMenu",
+    "step": "확정 버튼을 누른다",
+    "precondition": "레벨 선택에서 입장 가능한 레벨이 선택됐다",
+    "expectedValue": "선택한 레벨에서 플레이어 캐릭터가 나타난다"
+  },
+  {
+    "tc": 10206,
+    "scene": "MainMenu",
+    "step": "Settings를 누른다",
+    "precondition": "메인 메뉴",
+    "expectedValue": "캐릭터 선택 패널이 열린다"
+  },
+  {
+    "tc": 10207,
+    "scene": "MainMenu",
+    "step": "설정 패널의 닫기 버튼을 누른다",
+    "precondition": "메인 메뉴에서 Settings 패널을 열었다",
+    "expectedValue": "설정 패널이 닫힌다"
+  },
+  {
+    "tc": 10208,
+    "scene": "MainMenu",
+    "step": "Power Up을 누른다",
+    "precondition": "메인 메뉴",
+    "expectedValue": "레벨 선택 화면이 열린다"
+  },
+  {
+    "tc": 10209,
+    "scene": "MainMenu",
+    "step": "강화 패널의 닫기 버튼을 누른다",
+    "precondition": "메인 메뉴에서 Power Up 패널을 열었다",
+    "expectedValue": "강화 패널이 닫힌다"
+  },
+  {
+    "tc": 10210,
+    "scene": "Game",
+    "step": "경험치 드롭을 주워 레벨업하고 화면을 확인한다",
+    "precondition": "첫 레벨 진행 중이고 다음 레벨업까지 경험치가 조금 남았다",
+    "expectedValue": "메인 메뉴로 이동한다"
+  },
+  {
+    "tc": 10211,
+    "scene": "MainMenu",
+    "step": "레벨 선택 화면의 닫기 버튼을 누른다",
+    "precondition": "캐릭터 선택을 확정해 레벨 선택이 열렸다",
+    "expectedValue": "레벨 선택 화면이 닫힌다"
+  },
+  {
+    "tc": 10212,
+    "scene": "MainMenu",
+    "step": "확정 버튼을 누른다",
+    "precondition": "레벨 선택에서 입장 가능한 레벨이 선택됐다",
+    "expectedValue": "캐릭터 선택 화면이 다시 열린다"
+  },
+  {
+    "tc": 10213,
+    "scene": "MainMenu",
+    "step": "Settings를 누른다",
+    "precondition": "메인 메뉴",
+    "expectedValue": "설정 패널이 열린다"
+  },
+  {
+    "tc": 10214,
+    "scene": "MainMenu",
+    "step": "설정 패널의 닫기 버튼을 누른다",
+    "precondition": "메인 메뉴에서 Settings 패널을 열었다",
+    "expectedValue": "Power Up 패널이 열린다"
+  },
+  {
+    "tc": 10215,
+    "scene": "MainMenu",
+    "step": "Power Up을 누른다",
+    "precondition": "메인 메뉴",
+    "expectedValue": "영구 강화 항목이 있는 패널이 열린다"
+  },
+  {
+    "tc": 10216,
+    "scene": "MainMenu",
+    "step": "강화 패널의 닫기 버튼을 누른다",
+    "precondition": "메인 메뉴에서 Power Up 패널을 열었다",
+    "expectedValue": "전투 HUD가 표시된다"
+  },
+  {
+    "tc": 10217,
+    "scene": "Game",
+    "step": "경험치 드롭을 주워 레벨업하고 화면을 확인한다",
+    "precondition": "첫 레벨 진행 중이고 다음 레벨업까지 경험치가 조금 남았다",
+    "expectedValue": "스킬 선택 패널이 표시된다"
+  },
+  {
+    "tc": 10218,
+    "scene": "MainMenu",
+    "step": "New Game을 누른다",
+    "precondition": "메인 메뉴",
+    "expectedValue": "즉시 전투가 시작된다"
+  },
+  {
+    "tc": 10219,
+    "scene": "MainMenu",
+    "step": "캐릭터 선택 화면의 닫기 버튼을 누른다",
+    "precondition": "메인 메뉴에서 캐릭터 선택을 열었다",
+    "expectedValue": "캐릭터 선택 화면이 닫힌다"
+  },
+  {
+    "tc": 10220,
+    "scene": "MainMenu",
+    "step": "확정 버튼을 누른다",
+    "precondition": "캐릭터 선택에서 사용 가능한 캐릭터가 선택됐다",
+    "expectedValue": "설정 패널이 열린다"
+  }
+]

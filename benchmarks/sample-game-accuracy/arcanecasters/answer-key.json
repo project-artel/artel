@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10401,
+    "expected_passed": true,
+    "pair": "로비 로그인",
+    "observation": "로비가 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/LoginScene.unity"
+  },
+  {
+    "tc": 10402,
+    "expected_passed": false,
+    "pair": "잘못된 비밀번호",
+    "observation": "로그인 화면에서 실패가 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/LoginScene.unity"
+  },
+  {
+    "tc": 10403,
+    "expected_passed": true,
+    "pair": "회원가입 열기",
+    "observation": "회원가입 입력 화면이 열린다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/RegisterScene.unity"
+  },
+  {
+    "tc": 10404,
+    "expected_passed": false,
+    "pair": "로그인 복귀",
+    "observation": "로그인 입력 화면이 다시 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scripts/RegisterScene/GotoLoginButton.cs"
+  },
+  {
+    "tc": 10405,
+    "expected_passed": true,
+    "pair": "덱 관리 진입",
+    "observation": "보유 카드와 덱을 관리하는 화면이 열린다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/ManageDeckScene.unity"
+  },
+  {
+    "tc": 10406,
+    "expected_passed": false,
+    "pair": "마법 도감 진입",
+    "observation": "마법 목록이 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/MagicBookScene.unity"
+  },
+  {
+    "tc": 10407,
+    "expected_passed": true,
+    "pair": "마법 세부 정보",
+    "observation": "선택한 마법의 정보가 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scripts/MagicBookScene/SelectedMagicView.cs"
+  },
+  {
+    "tc": 10408,
+    "expected_passed": false,
+    "pair": "프로필 진입",
+    "observation": "현재 계정의 프로필이 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/ProfileScene.unity"
+  },
+  {
+    "tc": 10409,
+    "expected_passed": true,
+    "pair": "모험 목록 진입",
+    "observation": "모험 목록이 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/AdventuresScene.unity"
+  },
+  {
+    "tc": 10410,
+    "expected_passed": false,
+    "pair": "결과에서 복귀",
+    "observation": "로비가 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scripts/ResultScene/GotoLobbyButton.cs"
+  },
+  {
+    "tc": 10411,
+    "expected_passed": true,
+    "pair": "로그인 복귀",
+    "observation": "로그인 입력 화면이 다시 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scripts/RegisterScene/GotoLoginButton.cs"
+  },
+  {
+    "tc": 10412,
+    "expected_passed": false,
+    "pair": "덱 관리 진입",
+    "observation": "보유 카드와 덱을 관리하는 화면이 열린다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/ManageDeckScene.unity"
+  },
+  {
+    "tc": 10413,
+    "expected_passed": true,
+    "pair": "마법 도감 진입",
+    "observation": "마법 목록이 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/MagicBookScene.unity"
+  },
+  {
+    "tc": 10414,
+    "expected_passed": false,
+    "pair": "마법 세부 정보",
+    "observation": "선택한 마법의 정보가 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scripts/MagicBookScene/SelectedMagicView.cs"
+  },
+  {
+    "tc": 10415,
+    "expected_passed": true,
+    "pair": "프로필 진입",
+    "observation": "현재 계정의 프로필이 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/ProfileScene.unity"
+  },
+  {
+    "tc": 10416,
+    "expected_passed": false,
+    "pair": "모험 목록 진입",
+    "observation": "모험 목록이 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/AdventuresScene.unity"
+  },
+  {
+    "tc": 10417,
+    "expected_passed": true,
+    "pair": "결과에서 복귀",
+    "observation": "로비가 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scripts/ResultScene/GotoLobbyButton.cs"
+  },
+  {
+    "tc": 10418,
+    "expected_passed": false,
+    "pair": "로비 로그인",
+    "observation": "로비가 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/LoginScene.unity"
+  },
+  {
+    "tc": 10419,
+    "expected_passed": true,
+    "pair": "잘못된 비밀번호",
+    "observation": "로그인 화면에서 실패가 표시된다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/LoginScene.unity"
+  },
+  {
+    "tc": 10420,
+    "expected_passed": false,
+    "pair": "회원가입 열기",
+    "observation": "회원가입 입력 화면이 열린다",
+    "source": "samples/arcanecasters/arcanecasters-client/Assets/Scenes/RegisterScene.unity"
+  }
+]

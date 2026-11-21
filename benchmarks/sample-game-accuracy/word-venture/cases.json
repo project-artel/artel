@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10001,
+    "scene": "TitleScene",
+    "step": "새 게임을 누른다",
+    "precondition": "저장 데이터가 없는 타이틀 화면",
+    "expectedValue": "오프닝 대사가 표시된다"
+  },
+  {
+    "tc": 10002,
+    "scene": "StoryScene",
+    "step": "대사 진행 입력을 끝까지 반복한다",
+    "precondition": "새 게임 오프닝의 첫 대사",
+    "expectedValue": "타이틀 메뉴가 다시 표시된다"
+  },
+  {
+    "tc": 10003,
+    "scene": "MapScene",
+    "step": "현재 스테이지에 입장한다",
+    "precondition": "오프닝을 마치고 첫 입장 가능 노드에 있다",
+    "expectedValue": "전투 화면이 표시된다"
+  },
+  {
+    "tc": 10004,
+    "scene": "TurnBattleScene",
+    "step": "입력하기 전에 화면을 확인한다",
+    "precondition": "새 게임 첫 전투 진입 직후",
+    "expectedValue": "게임 클리어 화면이 표시된다"
+  },
+  {
+    "tc": 10005,
+    "scene": "TurnBattleScene",
+    "step": "조합 버튼을 누른다",
+    "precondition": "첫 전투 튜토리얼에서 조합 입력이 허용된다",
+    "expectedValue": "카드를 넣는 조합 슬롯이 표시된다"
+  },
+  {
+    "tc": 10006,
+    "scene": "TurnBattleScene",
+    "step": "spell 카드와 element 카드를 대응 슬롯에 각각 넣고 진행 대사를 넘긴다",
+    "precondition": "조합 패널이 열려 있고 두 슬롯이 비어 있다",
+    "expectedValue": "두 슬롯이 채워진 뒤에도 발동 버튼을 사용할 수 없다"
+  },
+  {
+    "tc": 10007,
+    "scene": "TurnBattleScene",
+    "step": "발동 버튼을 누르고 튜토리얼 안내를 대상 선택까지 넘긴다",
+    "precondition": "첫 전투에서 유효한 조합이 준비되어 있다",
+    "expectedValue": "적을 발동 대상으로 선택할 수 있다"
+  },
+  {
+    "tc": 10008,
+    "scene": "TitleScene",
+    "step": "설정 버튼을 누른다",
+    "precondition": "타이틀 화면",
+    "expectedValue": "전투가 시작된다"
+  },
+  {
+    "tc": 10009,
+    "scene": "TitleScene",
+    "step": "패널 닫기 버튼을 누른다",
+    "precondition": "타이틀에서 설정 패널을 연 상태",
+    "expectedValue": "타이틀 메뉴로 돌아온다"
+  },
+  {
+    "tc": 10010,
+    "scene": "TitleScene",
+    "step": "현재와 다른 언어를 선택하고 타이틀 메뉴 문구를 확인한다",
+    "precondition": "타이틀 설정에서 언어를 변경할 수 있다",
+    "expectedValue": "메뉴 문구가 이전 언어 그대로 유지된다"
+  },
+  {
+    "tc": 10011,
+    "scene": "TurnBattleScene",
+    "step": "입력하기 전에 화면을 확인한다",
+    "precondition": "새 게임 첫 전투 진입 직후",
+    "expectedValue": "튜토리얼 대사가 표시된다"
+  },
+  {
+    "tc": 10012,
+    "scene": "TurnBattleScene",
+    "step": "조합 버튼을 누른다",
+    "precondition": "첫 전투 튜토리얼에서 조합 입력이 허용된다",
+    "expectedValue": "맵의 노드 목록이 표시된다"
+  },
+  {
+    "tc": 10013,
+    "scene": "TurnBattleScene",
+    "step": "spell 카드와 element 카드를 대응 슬롯에 각각 넣고 진행 대사를 넘긴다",
+    "precondition": "조합 패널이 열려 있고 두 슬롯이 비어 있다",
+    "expectedValue": "발동 버튼을 사용할 수 있다"
+  },
+  {
+    "tc": 10014,
+    "scene": "TurnBattleScene",
+    "step": "발동 버튼을 누르고 튜토리얼 안내를 대상 선택까지 넘긴다",
+    "precondition": "첫 전투에서 유효한 조합이 준비되어 있다",
+    "expectedValue": "대상을 선택하기 전에 타이틀로 이동한다"
+  },
+  {
+    "tc": 10015,
+    "scene": "TitleScene",
+    "step": "설정 버튼을 누른다",
+    "precondition": "타이틀 화면",
+    "expectedValue": "설정 패널이 열린다"
+  },
+  {
+    "tc": 10016,
+    "scene": "TitleScene",
+    "step": "패널 닫기 버튼을 누른다",
+    "precondition": "타이틀에서 설정 패널을 연 상태",
+    "expectedValue": "스테이지 맵으로 이동한다"
+  },
+  {
+    "tc": 10017,
+    "scene": "TitleScene",
+    "step": "현재와 다른 언어를 선택하고 타이틀 메뉴 문구를 확인한다",
+    "precondition": "타이틀 설정에서 언어를 변경할 수 있다",
+    "expectedValue": "메뉴 문구가 선택한 언어로 바뀐다"
+  },
+  {
+    "tc": 10018,
+    "scene": "TitleScene",
+    "step": "새 게임을 누른다",
+    "precondition": "저장 데이터가 없는 타이틀 화면",
+    "expectedValue": "즉시 첫 전투 HUD가 표시된다"
+  },
+  {
+    "tc": 10019,
+    "scene": "StoryScene",
+    "step": "대사 진행 입력을 끝까지 반복한다",
+    "precondition": "새 게임 오프닝의 첫 대사",
+    "expectedValue": "맵 화면이 표시된다"
+  },
+  {
+    "tc": 10020,
+    "scene": "MapScene",
+    "step": "현재 스테이지에 입장한다",
+    "precondition": "오프닝을 마치고 첫 입장 가능 노드에 있다",
+    "expectedValue": "설정 창이 표시된다"
+  }
+]

@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10201,
+    "expected_passed": true,
+    "pair": "새 게임",
+    "observation": "캐릭터 선택 화면이 표시된다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/UIMainMenu.cs"
+  },
+  {
+    "tc": 10202,
+    "expected_passed": false,
+    "pair": "캐릭터 선택 취소",
+    "observation": "캐릭터 선택 화면이 닫힌다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/CharacterSelect/CharacterSelectPanel.cs"
+  },
+  {
+    "tc": 10203,
+    "expected_passed": true,
+    "pair": "캐릭터 확정",
+    "observation": "레벨 선택 화면이 열린다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/CharacterSelect/CharacterSelectPanel.cs"
+  },
+  {
+    "tc": 10204,
+    "expected_passed": false,
+    "pair": "레벨 선택 취소",
+    "observation": "레벨 선택 화면이 닫힌다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/LevelSelect/LevelSelectPanel.cs"
+  },
+  {
+    "tc": 10205,
+    "expected_passed": true,
+    "pair": "레벨 확정",
+    "observation": "선택한 레벨에서 플레이어 캐릭터가 나타난다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/LevelSelect/LevelSelectPanel.cs"
+  },
+  {
+    "tc": 10206,
+    "expected_passed": false,
+    "pair": "설정 열기",
+    "observation": "설정 패널이 열린다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/UIMainMenu.cs"
+  },
+  {
+    "tc": 10207,
+    "expected_passed": true,
+    "pair": "설정 닫기",
+    "observation": "설정 패널이 닫힌다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/Setting/SettingPanel.cs"
+  },
+  {
+    "tc": 10208,
+    "expected_passed": false,
+    "pair": "강화 열기",
+    "observation": "영구 강화 항목이 있는 패널이 열린다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/UIMainMenu.cs"
+  },
+  {
+    "tc": 10209,
+    "expected_passed": true,
+    "pair": "강화 닫기",
+    "observation": "강화 패널이 닫힌다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/PowerUp/PowerUpPanel.cs"
+  },
+  {
+    "tc": 10210,
+    "expected_passed": false,
+    "pair": "레벨업",
+    "observation": "스킬 선택 패널이 표시된다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/Game/UpgradeSkillPanel.cs"
+  },
+  {
+    "tc": 10211,
+    "expected_passed": true,
+    "pair": "레벨 선택 취소",
+    "observation": "레벨 선택 화면이 닫힌다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/LevelSelect/LevelSelectPanel.cs"
+  },
+  {
+    "tc": 10212,
+    "expected_passed": false,
+    "pair": "레벨 확정",
+    "observation": "선택한 레벨에서 플레이어 캐릭터가 나타난다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/LevelSelect/LevelSelectPanel.cs"
+  },
+  {
+    "tc": 10213,
+    "expected_passed": true,
+    "pair": "설정 열기",
+    "observation": "설정 패널이 열린다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/UIMainMenu.cs"
+  },
+  {
+    "tc": 10214,
+    "expected_passed": false,
+    "pair": "설정 닫기",
+    "observation": "설정 패널이 닫힌다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/Setting/SettingPanel.cs"
+  },
+  {
+    "tc": 10215,
+    "expected_passed": true,
+    "pair": "강화 열기",
+    "observation": "영구 강화 항목이 있는 패널이 열린다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/UIMainMenu.cs"
+  },
+  {
+    "tc": 10216,
+    "expected_passed": false,
+    "pair": "강화 닫기",
+    "observation": "강화 패널이 닫힌다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/PowerUp/PowerUpPanel.cs"
+  },
+  {
+    "tc": 10217,
+    "expected_passed": true,
+    "pair": "레벨업",
+    "observation": "스킬 선택 패널이 표시된다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/Game/UpgradeSkillPanel.cs"
+  },
+  {
+    "tc": 10218,
+    "expected_passed": false,
+    "pair": "새 게임",
+    "observation": "캐릭터 선택 화면이 표시된다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/UIMainMenu.cs"
+  },
+  {
+    "tc": 10219,
+    "expected_passed": true,
+    "pair": "캐릭터 선택 취소",
+    "observation": "캐릭터 선택 화면이 닫힌다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/CharacterSelect/CharacterSelectPanel.cs"
+  },
+  {
+    "tc": 10220,
+    "expected_passed": false,
+    "pair": "캐릭터 확정",
+    "observation": "레벨 선택 화면이 열린다",
+    "source": "samples/survivors-roguelike-kit/Assets/RGame/RoguelikeKit/Scripts/UI/MainMenu/CharacterSelect/CharacterSelectPanel.cs"
+  }
+]

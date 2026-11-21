@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10101,
+    "expected_passed": true,
+    "pair": "레벨 선택",
+    "observation": "레벨이 8개 표시된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/Levels.cs"
+  },
+  {
+    "tc": 10102,
+    "expected_passed": false,
+    "pair": "레벨 1 목표",
+    "observation": "점수 목표가 표시된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/Levels.cs"
+  },
+  {
+    "tc": 10103,
+    "expected_passed": true,
+    "pair": "유효 교환",
+    "observation": "남은 이동 수가 1 감소한다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10104,
+    "expected_passed": false,
+    "pair": "무효 교환",
+    "observation": "두 타일이 원래 위치로 돌아온다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/MatchEngine.cs"
+  },
+  {
+    "tc": 10105,
+    "expected_passed": true,
+    "pair": "셔플 비용",
+    "observation": "남은 이동 수가 유지된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10106,
+    "expected_passed": false,
+    "pair": "셔플 한도",
+    "observation": "두 번째 셔플이 실행되지 않는다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10107,
+    "expected_passed": true,
+    "pair": "망치 비용",
+    "observation": "남은 이동 수가 유지된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10108,
+    "expected_passed": false,
+    "pair": "망치 한도",
+    "observation": "두 번째 망치를 사용할 수 없다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10109,
+    "expected_passed": true,
+    "pair": "레벨 2 목표",
+    "observation": "빨강과 파랑 타일 수집 목표가 표시된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/Levels.cs"
+  },
+  {
+    "tc": 10110,
+    "expected_passed": false,
+    "pair": "레벨 3 목표",
+    "observation": "얼음 제거 목표가 표시된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/Levels.cs"
+  },
+  {
+    "tc": 10111,
+    "expected_passed": true,
+    "pair": "무효 교환",
+    "observation": "두 타일이 원래 위치로 돌아온다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/MatchEngine.cs"
+  },
+  {
+    "tc": 10112,
+    "expected_passed": false,
+    "pair": "셔플 비용",
+    "observation": "남은 이동 수가 유지된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10113,
+    "expected_passed": true,
+    "pair": "셔플 한도",
+    "observation": "두 번째 셔플이 실행되지 않는다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10114,
+    "expected_passed": false,
+    "pair": "망치 비용",
+    "observation": "남은 이동 수가 유지된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10115,
+    "expected_passed": true,
+    "pair": "망치 한도",
+    "observation": "두 번째 망치를 사용할 수 없다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  },
+  {
+    "tc": 10116,
+    "expected_passed": false,
+    "pair": "레벨 2 목표",
+    "observation": "빨강과 파랑 타일 수집 목표가 표시된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/Levels.cs"
+  },
+  {
+    "tc": 10117,
+    "expected_passed": true,
+    "pair": "레벨 3 목표",
+    "observation": "얼음 제거 목표가 표시된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/Levels.cs"
+  },
+  {
+    "tc": 10118,
+    "expected_passed": false,
+    "pair": "레벨 선택",
+    "observation": "레벨이 8개 표시된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/Levels.cs"
+  },
+  {
+    "tc": 10119,
+    "expected_passed": true,
+    "pair": "레벨 1 목표",
+    "observation": "점수 목표가 표시된다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/Levels.cs"
+  },
+  {
+    "tc": 10120,
+    "expected_passed": false,
+    "pair": "유효 교환",
+    "observation": "남은 이동 수가 1 감소한다",
+    "source": "samples/match3-unity/Assets/Scripts/Core/GameSession.cs"
+  }
+]

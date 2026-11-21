@@ -1,0 +1,142 @@
+[
+  {
+    "tc": 10101,
+    "scene": "Main",
+    "step": "레벨 선택 버튼을 센다",
+    "precondition": "저장 데이터가 없는 메뉴",
+    "expectedValue": "레벨이 8개 표시된다"
+  },
+  {
+    "tc": 10102,
+    "scene": "Main",
+    "step": "첫 입력 전에 목표 HUD를 확인한다",
+    "precondition": "새로 시작한 레벨 1",
+    "expectedValue": "상자 파괴 목표가 표시된다"
+  },
+  {
+    "tc": 10103,
+    "scene": "Main",
+    "step": "두 타일을 교환하고 애니메이션 종료 후 남은 이동 수를 읽는다",
+    "precondition": "레벨 1에서 3개 이상을 맞출 인접 타일 두 개가 보인다",
+    "expectedValue": "남은 이동 수가 1 감소한다"
+  },
+  {
+    "tc": 10104,
+    "scene": "Main",
+    "step": "두 타일을 교환하고 애니메이션 종료 후 보드를 확인한다",
+    "precondition": "레벨 1에서 어느 쪽에도 매치를 만들지 않는 인접 타일 두 개가 보인다",
+    "expectedValue": "두 타일이 교환한 위치에 남는다"
+  },
+  {
+    "tc": 10105,
+    "scene": "Main",
+    "step": "이동 수를 기록하고 셔플을 한 번 누른다",
+    "precondition": "레벨 1 시작 직후 셔플을 아직 쓰지 않았다",
+    "expectedValue": "남은 이동 수가 유지된다"
+  },
+  {
+    "tc": 10106,
+    "scene": "Main",
+    "step": "같은 레벨에서 셔플을 다시 누른다",
+    "precondition": "레벨 1에서 셔플을 1회 사용했다",
+    "expectedValue": "두 번째 셔플이 실행된다"
+  },
+  {
+    "tc": 10107,
+    "scene": "Main",
+    "step": "이동 수를 기록하고 망치로 일반 타일 하나를 친다",
+    "precondition": "레벨 1 시작 직후 망치를 아직 쓰지 않았다",
+    "expectedValue": "남은 이동 수가 유지된다"
+  },
+  {
+    "tc": 10108,
+    "scene": "Main",
+    "step": "같은 레벨에서 망치를 다시 사용하려 한다",
+    "precondition": "레벨 1에서 망치를 1회 사용했다",
+    "expectedValue": "두 번째 망치를 사용할 수 있다"
+  },
+  {
+    "tc": 10109,
+    "scene": "Main",
+    "step": "레벨 2 시작 직후 목표 HUD를 확인한다",
+    "precondition": "레벨 1을 클리어하여 레벨 2에 입장할 수 있다",
+    "expectedValue": "빨강과 파랑 타일 수집 목표가 표시된다"
+  },
+  {
+    "tc": 10110,
+    "scene": "Main",
+    "step": "레벨 3 시작 직후 목표 HUD를 확인한다",
+    "precondition": "레벨 2를 클리어하여 레벨 3에 입장할 수 있다",
+    "expectedValue": "상자 파괴 목표가 표시된다"
+  },
+  {
+    "tc": 10111,
+    "scene": "Main",
+    "step": "두 타일을 교환하고 애니메이션 종료 후 보드를 확인한다",
+    "precondition": "레벨 1에서 어느 쪽에도 매치를 만들지 않는 인접 타일 두 개가 보인다",
+    "expectedValue": "두 타일이 원래 위치로 돌아온다"
+  },
+  {
+    "tc": 10112,
+    "scene": "Main",
+    "step": "이동 수를 기록하고 셔플을 한 번 누른다",
+    "precondition": "레벨 1 시작 직후 셔플을 아직 쓰지 않았다",
+    "expectedValue": "남은 이동 수가 1 감소한다"
+  },
+  {
+    "tc": 10113,
+    "scene": "Main",
+    "step": "같은 레벨에서 셔플을 다시 누른다",
+    "precondition": "레벨 1에서 셔플을 1회 사용했다",
+    "expectedValue": "두 번째 셔플이 실행되지 않는다"
+  },
+  {
+    "tc": 10114,
+    "scene": "Main",
+    "step": "이동 수를 기록하고 망치로 일반 타일 하나를 친다",
+    "precondition": "레벨 1 시작 직후 망치를 아직 쓰지 않았다",
+    "expectedValue": "남은 이동 수가 1 감소한다"
+  },
+  {
+    "tc": 10115,
+    "scene": "Main",
+    "step": "같은 레벨에서 망치를 다시 사용하려 한다",
+    "precondition": "레벨 1에서 망치를 1회 사용했다",
+    "expectedValue": "두 번째 망치를 사용할 수 없다"
+  },
+  {
+    "tc": 10116,
+    "scene": "Main",
+    "step": "레벨 2 시작 직후 목표 HUD를 확인한다",
+    "precondition": "레벨 1을 클리어하여 레벨 2에 입장할 수 있다",
+    "expectedValue": "얼음 제거 목표가 표시된다"
+  },
+  {
+    "tc": 10117,
+    "scene": "Main",
+    "step": "레벨 3 시작 직후 목표 HUD를 확인한다",
+    "precondition": "레벨 2를 클리어하여 레벨 3에 입장할 수 있다",
+    "expectedValue": "얼음 제거 목표가 표시된다"
+  },
+  {
+    "tc": 10118,
+    "scene": "Main",
+    "step": "레벨 선택 버튼을 센다",
+    "precondition": "저장 데이터가 없는 메뉴",
+    "expectedValue": "레벨이 9개 표시된다"
+  },
+  {
+    "tc": 10119,
+    "scene": "Main",
+    "step": "첫 입력 전에 목표 HUD를 확인한다",
+    "precondition": "새로 시작한 레벨 1",
+    "expectedValue": "점수 목표가 표시된다"
+  },
+  {
+    "tc": 10120,
+    "scene": "Main",
+    "step": "두 타일을 교환하고 애니메이션 종료 후 남은 이동 수를 읽는다",
+    "precondition": "레벨 1에서 3개 이상을 맞출 인접 타일 두 개가 보인다",
+    "expectedValue": "남은 이동 수가 2 감소한다"
+  }
+]
